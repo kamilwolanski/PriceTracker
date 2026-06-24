@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using PriceTracker.Data;
+using PriceTracker.Services;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -13,6 +14,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     ));
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+builder.Services.AddScoped<TrackedProductService>();
+builder.Services.AddScoped<PriceHistoryService>();
 
 var app = builder.Build();
 

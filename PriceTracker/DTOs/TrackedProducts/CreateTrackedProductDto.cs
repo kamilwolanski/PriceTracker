@@ -1,4 +1,4 @@
-﻿namespace PriceTracker.DTOs
+﻿namespace PriceTracker.DTOs.TrackedProducts
 {
     public class CreateTrackedProductDto
     {

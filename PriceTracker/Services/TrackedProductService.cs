@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using PriceTracker.Data;
+using PriceTracker.DTOs.TrackedProducts;
 using PriceTracker.Models;
 
 namespace PriceTracker.Services
@@ -12,9 +13,48 @@ namespace PriceTracker.Services
             _context = context;
         }
 
-        public async Task<List<TrackedProduct>> GetAllTrackedProductsAsync()
+        public async Task<List<TrackedProductDto>> GetAllTrackedProductsAsync()
         {
-            return await _context.TrackedProducts.ToListAsync();
+            return await _context.TrackedProducts.Select(tp => new TrackedProductDto
+            {
+                Id = tp.Id,
+                Name = tp.Name,
+                Url = tp.Url,
+            }).ToListAsync();
+        }
+
+        public async Task<TrackedProductDto?> GetByIdAsync(Guid id)
+        {
+            return await _context.TrackedProducts
+                .Where(tp => tp.Id == id)
+                .Select(tp => new TrackedProductDto()
+                {
+                    Id = tp.Id,
+                    Name = tp.Name,
+                    Url = tp.Url,
+                })
+                .FirstOrDefaultAsync();
+        }
+
+        public async Task<TrackedProductDto> AddAsync(CreateTrackedProductDto dto)
+        {
+            var trackedProduct = new TrackedProduct
+            {
+                Id = Guid.NewGuid(),
+                Name = dto.Name,
+                Url = dto.Url
+            };
+
+            _context.TrackedProducts.Add(trackedProduct);
+
+            await _context.SaveChangesAsync();
+
+            return new TrackedProductDto
+            {
+                Id = trackedProduct.Id,
+                Name = trackedProduct.Name,
+                Url = trackedProduct.Url
+            };
         }
     }
 

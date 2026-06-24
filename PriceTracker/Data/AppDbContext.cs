@@ -11,5 +11,9 @@ namespace PriceTracker.Data
         }
 
         public DbSet<TrackedProduct> TrackedProducts { get; set; }
-    }
+        public DbSet<PriceHistory> PriceHistories
+        {
+            get; set;
+        }
+}
 }

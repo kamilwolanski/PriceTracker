@@ -6,7 +6,6 @@
         public string Name { get; set; } = null!;
         public string Url { get; set; } = null!;
 
-        public decimal CurrentPrice { get; set; }
-        public DateTime CreatedAt { get; set; }
+        public List<PriceHistory> PriceHistory { get; set; } = new();
     }
 }

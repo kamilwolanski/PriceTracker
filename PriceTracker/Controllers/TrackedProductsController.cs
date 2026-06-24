@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using PriceTracker.Data;
-using PriceTracker.DTOs;
-using PriceTracker.Models;
+using PriceTracker.DTOs.TrackedProducts;
+using PriceTracker.Services;
 
 namespace PriceTracker.Controllers
 {
@@ -9,32 +8,41 @@ namespace PriceTracker.Controllers
     [Route("tracked-products")]
     public class TrackedProductsController : ControllerBase
     {
-        private readonly AppDbContext _context;
-        public TrackedProductsController(AppDbContext context)
+
+        private readonly TrackedProductService _trackedProductService;
+        public TrackedProductsController(TrackedProductService trackedProductService)
         {
-            _context = context;
+            _trackedProductService = trackedProductService;
         }
 
         [HttpGet]
-        public IActionResult GetTrackedProducts()
+        public async Task<IActionResult> GetTrackedProducts()
         {
-            var trackedProducts = _context.TrackedProducts.ToList();
+            var trackedProducts = await _trackedProductService.GetAllTrackedProductsAsync();
             return Ok(trackedProducts);
+        }
+
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetById(Guid id)
+        {
+            var product = await _trackedProductService.GetByIdAsync(id);
+
+            if (product == null)
+                return NotFound();
+
+            return Ok(product);
         }
 
         [HttpPost]
         public async Task<IActionResult> AddTrackedProduct([FromBody] CreateTrackedProductDto product)
         {
-            var newProduct = new TrackedProduct
-            {
-                Name = product.Name,
-                Url = product.Url
-            };
+            var created = await _trackedProductService.AddAsync(product);
 
-            _context.TrackedProducts.Add(newProduct);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction(nameof(GetTrackedProducts), new { id = newProduct.Id }, newProduct);
+            return CreatedAtAction(
+                nameof(GetById),
+                new { id = created.Id },
+                created
+            );
 
         }
     }
