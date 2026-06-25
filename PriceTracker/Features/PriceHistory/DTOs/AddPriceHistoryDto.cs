@@ -1,4 +1,4 @@
-﻿namespace PriceTracker.DTOs.PriceHistory
+namespace PriceTracker.Features.PriceHistory.DTOs
 {
     public class AddPriceHistoryDto
     {

@@ -1,9 +1,9 @@
-﻿using PriceTracker.Data;
-using PriceTracker.DTOs.PriceHistory;
+using Microsoft.EntityFrameworkCore;
+using PriceTracker.Data;
+using PriceTracker.Features.PriceHistory.DTOs;
 using PriceTracker.Models;
-using Microsoft.EntityFrameworkCore; // <- dodaj to
 
-namespace PriceTracker.Services
+namespace PriceTracker.Features.PriceHistory
 {
     public class PriceHistoryService
     {
@@ -29,7 +29,7 @@ namespace PriceTracker.Services
 
         public async Task<PriceHistoryDto> AddAsync(AddPriceHistoryDto dto)
         {
-            var priceHistory = new PriceHistory()
+            var priceHistory = new Models.PriceHistory
             {
                 Id = Guid.NewGuid(),
                 Price = dto.Price,
@@ -40,15 +40,43 @@ namespace PriceTracker.Services
             _context.Add(priceHistory);
             await _context.SaveChangesAsync();
 
-            var priceHistoryDto = new PriceHistoryDto()
+            return new PriceHistoryDto
             {
                 Id = priceHistory.Id,
                 Price = priceHistory.Price,
                 CheckedAt = priceHistory.CheckedAt,
                 TrackedProductId = priceHistory.TrackedProductId
             };
+        }
 
-            return priceHistoryDto;
+        public async Task<PriceHistoryDto?> UpdateAsync(Guid id, UpdatePriceHistoryDto dto)
+        {
+            var priceHistory = await _context.PriceHistories.FindAsync(id);
+            if (priceHistory == null)
+                return null;
+
+            priceHistory.Price = dto.Price;
+            priceHistory.CheckedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+
+            return new PriceHistoryDto
+            {
+                Id = priceHistory.Id,
+                Price = priceHistory.Price,
+                CheckedAt = priceHistory.CheckedAt,
+                TrackedProductId = priceHistory.TrackedProductId
+            };
+        }
+
+        public async Task<bool> DeleteAsync(Guid id)
+        {
+            var priceHistory = await _context.PriceHistories.FindAsync(id);
+            if (priceHistory == null)
+                return false;
+
+            _context.PriceHistories.Remove(priceHistory);
+            await _context.SaveChangesAsync();
+            return true;
         }
     }
 }

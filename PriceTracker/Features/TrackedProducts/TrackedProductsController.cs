@@ -1,14 +1,12 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using PriceTracker.DTOs.TrackedProducts;
-using PriceTracker.Services;
+using Microsoft.AspNetCore.Mvc;
+using PriceTracker.Features.TrackedProducts.DTOs;
 
-namespace PriceTracker.Controllers
+namespace PriceTracker.Features.TrackedProducts
 {
     [ApiController]
     [Route("tracked-products")]
     public class TrackedProductsController : ControllerBase
     {
-
         private readonly TrackedProductService _trackedProductService;
         public TrackedProductsController(TrackedProductService trackedProductService)
         {
@@ -43,7 +41,24 @@ namespace PriceTracker.Controllers
                 new { id = created.Id },
                 created
             );
+        }
 
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateTrackedProduct(Guid id, [FromBody] UpdateTrackedProductDto product)
+        {
+            var updated = await _trackedProductService.UpdateAsync(id, product);
+            if (updated == null)
+                return NotFound();
+            return Ok(updated);
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteTrackedProduct(Guid id)
+        {
+            var deleted = await _trackedProductService.DeleteAsync(id);
+            if (!deleted)
+                return NotFound();
+            return NoContent();
         }
     }
 }

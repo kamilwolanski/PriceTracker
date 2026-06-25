@@ -1,8 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using PriceTracker.DTOs.PriceHistory;
-using PriceTracker.Services;
+using Microsoft.AspNetCore.Mvc;
+using PriceTracker.Features.PriceHistory.DTOs;
 
-namespace PriceTracker.Controllers
+namespace PriceTracker.Features.PriceHistory
 {
     [ApiController]
     [Route("price-history")]
@@ -35,6 +34,24 @@ namespace PriceTracker.Controllers
                 new { id = created.Id },
                 created
             );
+        }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(Guid id, [FromBody] UpdatePriceHistoryDto dto)
+        {
+            var updated = await _priceHistoryService.UpdateAsync(id, dto);
+            if (updated == null)
+                return NotFound();
+            return Ok(updated);
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(Guid id)
+        {
+            var deleted = await _priceHistoryService.DeleteAsync(id);
+            if (!deleted)
+                return NotFound();
+            return NoContent();
         }
     }
 }

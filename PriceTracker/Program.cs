@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using PriceTracker.Data;
-using PriceTracker.Services;
+using PriceTracker.Features.PriceHistory;
+using PriceTracker.Features.TrackedProducts;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);

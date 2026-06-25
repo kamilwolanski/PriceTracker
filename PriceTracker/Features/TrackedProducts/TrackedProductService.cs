@@ -1,9 +1,9 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using PriceTracker.Data;
-using PriceTracker.DTOs.TrackedProducts;
+using PriceTracker.Features.TrackedProducts.DTOs;
 using PriceTracker.Models;
 
-namespace PriceTracker.Services
+namespace PriceTracker.Features.TrackedProducts
 {
     public class TrackedProductService
     {
@@ -46,7 +46,6 @@ namespace PriceTracker.Services
             };
 
             _context.TrackedProducts.Add(trackedProduct);
-
             await _context.SaveChangesAsync();
 
             return new TrackedProductDto
@@ -56,6 +55,34 @@ namespace PriceTracker.Services
                 Url = trackedProduct.Url
             };
         }
-    }
 
+        public async Task<TrackedProductDto?> UpdateAsync(Guid id, UpdateTrackedProductDto dto)
+        {
+            var trackedProduct = await _context.TrackedProducts.FindAsync(id);
+            if (trackedProduct == null)
+                return null;
+
+            trackedProduct.Name = dto.Name;
+            trackedProduct.Url = dto.Url;
+            await _context.SaveChangesAsync();
+
+            return new TrackedProductDto
+            {
+                Id = trackedProduct.Id,
+                Name = trackedProduct.Name,
+                Url = trackedProduct.Url
+            };
+        }
+
+        public async Task<bool> DeleteAsync(Guid id)
+        {
+            var trackedProduct = await _context.TrackedProducts.FindAsync(id);
+            if (trackedProduct == null)
+                return false;
+
+            _context.TrackedProducts.Remove(trackedProduct);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+    }
 }
