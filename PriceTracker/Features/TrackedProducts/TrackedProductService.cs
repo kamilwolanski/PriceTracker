@@ -13,21 +13,23 @@ namespace PriceTracker.Features.TrackedProducts
             _context = context;
         }
 
-        public async Task<List<TrackedProductDto>> GetAllTrackedProductsAsync()
-        {
-            return await _context.TrackedProducts.Select(tp => new TrackedProductDto
-            {
-                Id = tp.Id,
-                Name = tp.Name,
-                Url = tp.Url,
-            }).ToListAsync();
-        }
-
-        public async Task<TrackedProductDto?> GetByIdAsync(Guid id)
+        public async Task<List<TrackedProductDto>> GetAllTrackedProductsAsync(Guid userId)
         {
             return await _context.TrackedProducts
-                .Where(tp => tp.Id == id)
-                .Select(tp => new TrackedProductDto()
+                .Where(tp => tp.UserId == userId)
+                .Select(tp => new TrackedProductDto
+                {
+                    Id = tp.Id,
+                    Name = tp.Name,
+                    Url = tp.Url,
+                }).ToListAsync();
+        }
+
+        public async Task<TrackedProductDto?> GetByIdAsync(Guid id, Guid userId)
+        {
+            return await _context.TrackedProducts
+                .Where(tp => tp.Id == id && tp.UserId == userId)
+                .Select(tp => new TrackedProductDto
                 {
                     Id = tp.Id,
                     Name = tp.Name,
@@ -36,13 +38,14 @@ namespace PriceTracker.Features.TrackedProducts
                 .FirstOrDefaultAsync();
         }
 
-        public async Task<TrackedProductDto> AddAsync(CreateTrackedProductDto dto)
+        public async Task<TrackedProductDto> AddAsync(CreateTrackedProductDto dto, Guid userId)
         {
             var trackedProduct = new TrackedProduct
             {
                 Id = Guid.NewGuid(),
                 Name = dto.Name,
-                Url = dto.Url
+                Url = dto.Url,
+                UserId = userId
             };
 
             _context.TrackedProducts.Add(trackedProduct);
@@ -56,9 +59,11 @@ namespace PriceTracker.Features.TrackedProducts
             };
         }
 
-        public async Task<TrackedProductDto?> UpdateAsync(Guid id, UpdateTrackedProductDto dto)
+        public async Task<TrackedProductDto?> UpdateAsync(Guid id, UpdateTrackedProductDto dto, Guid userId)
         {
-            var trackedProduct = await _context.TrackedProducts.FindAsync(id);
+            var trackedProduct = await _context.TrackedProducts
+                .FirstOrDefaultAsync(tp => tp.Id == id && tp.UserId == userId);
+
             if (trackedProduct == null)
                 return null;
 
@@ -74,9 +79,11 @@ namespace PriceTracker.Features.TrackedProducts
             };
         }
 
-        public async Task<bool> DeleteAsync(Guid id)
+        public async Task<bool> DeleteAsync(Guid id, Guid userId)
         {
-            var trackedProduct = await _context.TrackedProducts.FindAsync(id);
+            var trackedProduct = await _context.TrackedProducts
+                .FirstOrDefaultAsync(tp => tp.Id == id && tp.UserId == userId);
+
             if (trackedProduct == null)
                 return false;
 

@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using PriceTracker.Data;
@@ -11,9 +12,11 @@ using PriceTracker.Data;
 namespace PriceTracker.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260625100001_AddUser")]
+    partial class AddUser
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -42,29 +45,6 @@ namespace PriceTracker.Migrations
                     b.HasIndex("TrackedProductId");
 
                     b.ToTable("PriceHistories");
-                });
-
-            modelBuilder.Entity("PriceTracker.Models.RefreshToken", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("ExpiresAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Token")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("RefreshTokens");
                 });
 
             modelBuilder.Entity("PriceTracker.Models.TrackedProduct", b =>
@@ -125,17 +105,6 @@ namespace PriceTracker.Migrations
                     b.Navigation("TrackedProduct");
                 });
 
-            modelBuilder.Entity("PriceTracker.Models.RefreshToken", b =>
-                {
-                    b.HasOne("PriceTracker.Models.User", "User")
-                        .WithMany("RefreshTokens")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("PriceTracker.Models.TrackedProduct", b =>
                 {
                     b.HasOne("PriceTracker.Models.User", "User")
@@ -154,8 +123,6 @@ namespace PriceTracker.Migrations
 
             modelBuilder.Entity("PriceTracker.Models.User", b =>
                 {
-                    b.Navigation("RefreshTokens");
-
                     b.Navigation("TrackedProducts");
                 });
 #pragma warning restore 612, 618

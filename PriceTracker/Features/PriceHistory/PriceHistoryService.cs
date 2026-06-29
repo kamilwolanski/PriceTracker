@@ -13,10 +13,10 @@ namespace PriceTracker.Features.PriceHistory
             _context = context;
         }
 
-        public async Task<PriceHistoryDto?> GetByIdAsync(Guid id)
+        public async Task<PriceHistoryDto?> GetByIdAsync(Guid id, Guid userId)
         {
             return await _context.PriceHistories
-                .Where(ph => ph.Id == id)
+                .Where(ph => ph.Id == id && ph.TrackedProduct.UserId == userId)
                 .Select(ph => new PriceHistoryDto
                 {
                     Id = ph.Id,
@@ -27,8 +27,14 @@ namespace PriceTracker.Features.PriceHistory
                 .FirstOrDefaultAsync();
         }
 
-        public async Task<PriceHistoryDto> AddAsync(AddPriceHistoryDto dto)
+        public async Task<PriceHistoryDto?> AddAsync(AddPriceHistoryDto dto, Guid userId)
         {
+            var trackedProductExists = await _context.TrackedProducts
+                .AnyAsync(tp => tp.Id == dto.TrackedProductId && tp.UserId == userId);
+
+            if (!trackedProductExists)
+                return null;
+
             var priceHistory = new Models.PriceHistory
             {
                 Id = Guid.NewGuid(),
@@ -49,9 +55,11 @@ namespace PriceTracker.Features.PriceHistory
             };
         }
 
-        public async Task<PriceHistoryDto?> UpdateAsync(Guid id, UpdatePriceHistoryDto dto)
+        public async Task<PriceHistoryDto?> UpdateAsync(Guid id, UpdatePriceHistoryDto dto, Guid userId)
         {
-            var priceHistory = await _context.PriceHistories.FindAsync(id);
+            var priceHistory = await _context.PriceHistories
+                .FirstOrDefaultAsync(ph => ph.Id == id && ph.TrackedProduct.UserId == userId);
+
             if (priceHistory == null)
                 return null;
 
@@ -68,9 +76,11 @@ namespace PriceTracker.Features.PriceHistory
             };
         }
 
-        public async Task<bool> DeleteAsync(Guid id)
+        public async Task<bool> DeleteAsync(Guid id, Guid userId)
         {
-            var priceHistory = await _context.PriceHistories.FindAsync(id);
+            var priceHistory = await _context.PriceHistories
+                .FirstOrDefaultAsync(ph => ph.Id == id && ph.TrackedProduct.UserId == userId);
+
             if (priceHistory == null)
                 return false;
 
