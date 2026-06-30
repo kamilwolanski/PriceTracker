@@ -29,18 +29,34 @@ namespace PriceTracker.Features.PriceHistory
 
         public async Task<PriceHistoryDto?> AddAsync(AddPriceHistoryDto dto, Guid userId)
         {
-            var trackedProductExists = await _context.TrackedProducts
-                .AnyAsync(tp => tp.Id == dto.TrackedProductId && tp.UserId == userId);
-
-            if (!trackedProductExists)
+            if (!await ProductBelongsToUserAsync(dto.TrackedProductId, userId))
                 return null;
 
+            return await AddEntryAsync(dto.TrackedProductId, dto.Price);
+        }
+
+        public async Task<PriceHistoryDto?> AddFromCheckAsync(Guid trackedProductId, decimal price, Guid userId)
+        {
+            if (!await ProductBelongsToUserAsync(trackedProductId, userId))
+                return null;
+
+            return await AddEntryAsync(trackedProductId, price);
+        }
+
+        private async Task<bool> ProductBelongsToUserAsync(Guid trackedProductId, Guid userId)
+        {
+            return await _context.TrackedProducts
+                .AnyAsync(tp => tp.Id == trackedProductId && tp.UserId == userId);
+        }
+
+        private async Task<PriceHistoryDto> AddEntryAsync(Guid trackedProductId, decimal price)
+        {
             var priceHistory = new Models.PriceHistory
             {
                 Id = Guid.NewGuid(),
-                Price = dto.Price,
+                Price = price,
                 CheckedAt = DateTime.UtcNow,
-                TrackedProductId = dto.TrackedProductId
+                TrackedProductId = trackedProductId
             };
 
             _context.Add(priceHistory);

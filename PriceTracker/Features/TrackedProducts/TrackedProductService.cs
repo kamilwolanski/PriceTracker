@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using PriceTracker.Data;
+using PriceTracker.Features.PriceHistory.DTOs;
 using PriceTracker.Features.TrackedProducts.DTOs;
 using PriceTracker.Models;
 
@@ -22,7 +23,16 @@ namespace PriceTracker.Features.TrackedProducts
                     Id = tp.Id,
                     Name = tp.Name,
                     Url = tp.Url,
-                }).ToListAsync();
+                    CurrentPrice = tp.PriceHistory
+                        .OrderByDescending(ph => ph.CheckedAt)
+                        .Select(ph => (decimal?)ph.Price)
+                        .FirstOrDefault(),
+                    LastCheckedAt = tp.PriceHistory
+                        .OrderByDescending(ph => ph.CheckedAt)
+                        .Select(ph => (DateTime?)ph.CheckedAt)
+                        .FirstOrDefault(),
+                })
+                .ToListAsync();
         }
 
         public async Task<TrackedProductDto?> GetByIdAsync(Guid id, Guid userId)
@@ -34,8 +44,37 @@ namespace PriceTracker.Features.TrackedProducts
                     Id = tp.Id,
                     Name = tp.Name,
                     Url = tp.Url,
+                    CurrentPrice = tp.PriceHistory
+                        .OrderByDescending(ph => ph.CheckedAt)
+                        .Select(ph => (decimal?)ph.Price)
+                        .FirstOrDefault(),
+                    LastCheckedAt = tp.PriceHistory
+                        .OrderByDescending(ph => ph.CheckedAt)
+                        .Select(ph => (DateTime?)ph.CheckedAt)
+                        .FirstOrDefault(),
                 })
                 .FirstOrDefaultAsync();
+        }
+
+        public async Task<List<PriceHistoryDto>?> GetPriceHistoryAsync(Guid trackedProductId, Guid userId)
+        {
+            var exists = await _context.TrackedProducts
+                .AnyAsync(tp => tp.Id == trackedProductId && tp.UserId == userId);
+
+            if (!exists)
+                return null;
+
+            return await _context.PriceHistories
+                .Where(ph => ph.TrackedProductId == trackedProductId)
+                .OrderByDescending(ph => ph.CheckedAt)
+                .Select(ph => new PriceHistoryDto
+                {
+                    Id = ph.Id,
+                    Price = ph.Price,
+                    CheckedAt = ph.CheckedAt,
+                    TrackedProductId = trackedProductId,
+                })
+                .ToListAsync();
         }
 
         public async Task<TrackedProductDto> AddAsync(CreateTrackedProductDto dto, Guid userId)
@@ -71,12 +110,7 @@ namespace PriceTracker.Features.TrackedProducts
             trackedProduct.Url = dto.Url;
             await _context.SaveChangesAsync();
 
-            return new TrackedProductDto
-            {
-                Id = trackedProduct.Id,
-                Name = trackedProduct.Name,
-                Url = trackedProduct.Url
-            };
+            return await GetByIdAsync(id, userId);
         }
 
         public async Task<bool> DeleteAsync(Guid id, Guid userId)

@@ -4,6 +4,7 @@ using Microsoft.IdentityModel.Tokens;
 using PriceTracker.Data;
 using PriceTracker.Features.Auth;
 using PriceTracker.Features.PriceHistory;
+using PriceTracker.Features.PriceChecking;
 using PriceTracker.Features.TrackedProducts;
 using Scalar.AspNetCore;
 using System.Text;
@@ -23,6 +24,8 @@ builder.Services.AddOpenApi();
 builder.Services.AddScoped<TrackedProductService>();
 builder.Services.AddScoped<PriceHistoryService>();
 builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<IPriceScraper, MockPriceScraper>();
+builder.Services.AddScoped<PriceCheckingService>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -57,3 +60,5 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+public partial class Program { }

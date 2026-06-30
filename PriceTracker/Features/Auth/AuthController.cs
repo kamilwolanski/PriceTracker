@@ -43,6 +43,7 @@ namespace PriceTracker.Features.Auth
             return Ok(new { result.Token, result.RefreshToken });
         }
 
+
         [HttpPost("logout")]
         public async Task<IActionResult> Logout([FromBody] RefreshTokenDto dto)
         {

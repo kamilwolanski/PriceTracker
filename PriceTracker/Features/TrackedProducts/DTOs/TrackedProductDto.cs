@@ -6,7 +6,7 @@ namespace PriceTracker.Features.TrackedProducts.DTOs
         public string Name { get; set; } = null!;
         public string Url { get; set; } = null!;
 
-        public decimal CurrentPrice { get; set; }
-        public DateTime CreatedAt { get; set; }
+        public decimal? CurrentPrice { get; set; }
+        public DateTime? LastCheckedAt { get; set; }
     }
 }
