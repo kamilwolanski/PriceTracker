@@ -1,7 +1,8 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using PriceTracker.Features.TrackedProductCreation;
 using PriceTracker.Features.TrackedProducts.DTOs;
+using System.Security.Claims;
 
 namespace PriceTracker.Features.TrackedProducts
 {
@@ -11,9 +12,13 @@ namespace PriceTracker.Features.TrackedProducts
     public class TrackedProductsController : ControllerBase
     {
         private readonly TrackedProductService _trackedProductService;
-        public TrackedProductsController(TrackedProductService trackedProductService)
+        private readonly TrackedProductCreationService _trackedProductCreationService;
+        public TrackedProductsController(
+            TrackedProductService trackedProductService,
+            TrackedProductCreationService trackedProductCreationService)
         {
             _trackedProductService = trackedProductService;
+            _trackedProductCreationService = trackedProductCreationService;
         }
 
         private Guid GetUserId() => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
@@ -48,12 +53,12 @@ namespace PriceTracker.Features.TrackedProducts
         [HttpPost]
         public async Task<IActionResult> AddTrackedProduct([FromBody] CreateTrackedProductDto product)
         {
-            var created = await _trackedProductService.AddAsync(product, GetUserId());
+            var result = await _trackedProductCreationService.CreateAsync(product, GetUserId());
 
             return CreatedAtAction(
                 nameof(GetById),
-                new { id = created.Id },
-                created
+                new { id = result.Product!.Id },
+                result
             );
         }
 
@@ -76,3 +81,4 @@ namespace PriceTracker.Features.TrackedProducts
         }
     }
 }
+

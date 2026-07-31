@@ -7,6 +7,7 @@ using PriceTracker.Data;
 using PriceTracker.Features.Auth;
 using PriceTracker.Features.PriceHistory;
 using PriceTracker.Features.PriceChecking;
+using PriceTracker.Features.TrackedProductCreation;
 using PriceTracker.Features.TrackedProducts;
 using Scalar.AspNetCore;
 using System.Text;
@@ -45,6 +46,7 @@ builder.Services.AddScoped<PriceHistoryService>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<IPriceScraper, MockPriceScraper>();
 builder.Services.AddScoped<PriceCheckingService>();
+builder.Services.AddScoped<TrackedProductCreationService>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -81,3 +83,4 @@ app.MapControllers();
 app.Run();
 
 public partial class Program { }
+

@@ -1,4 +1,4 @@
-﻿using PriceTracker.Features.PriceHistory;
+using PriceTracker.Features.PriceHistory;
 using PriceTracker.Features.TrackedProducts;
 
 namespace PriceTracker.Features.PriceChecking
@@ -25,7 +25,16 @@ namespace PriceTracker.Features.PriceChecking
             if (product == null)
                 return PriceCheckResult.NotFound();
 
-            var scrapedPrice = await _scraper.ScrapePriceAsync(product.Url);
+            decimal? scrapedPrice;
+            try
+            {
+                scrapedPrice = await _scraper.ScrapePriceAsync(product.Url);
+            }
+            catch
+            {
+                return PriceCheckResult.ScrapeFailed();
+            }
+
             if (scrapedPrice == null)
                 return PriceCheckResult.ScrapeFailed();
 
@@ -39,3 +48,5 @@ namespace PriceTracker.Features.PriceChecking
         }
     }
 }
+
+
