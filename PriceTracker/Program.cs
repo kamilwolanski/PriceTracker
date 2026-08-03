@@ -11,6 +11,10 @@ using PriceTracker.Features.TrackedProductCreation;
 using PriceTracker.Features.TrackedProducts;
 using Scalar.AspNetCore;
 using System.Text;
+using PriceTracker.Features.PriceChecking.HtmlAgilityScraper;
+using PriceTracker.Features.PriceChecking.PlaywrightScraper;
+using PriceTracker.Features.PriceChecking.Strategies;
+using PriceTracker.Features.PriceChecking.WebsiteScrapers;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -44,7 +48,11 @@ builder.Services.AddOpenApi(options =>
 builder.Services.AddScoped<TrackedProductService>();
 builder.Services.AddScoped<PriceHistoryService>();
 builder.Services.AddScoped<AuthService>();
-builder.Services.AddScoped<IPriceScraper, MockPriceScraper>();
+builder.Services.AddScoped<IPriceScraper, PriceScraper>();
+builder.Services.AddScoped<IPriceScrapingStrategy, XkomPriceScraper>();
+builder.Services.AddScoped<IPriceScrapingStrategy, OlxPriceScraper>();
+builder.Services.AddScoped<IPriceScrapingStrategy, HtmlAgilityScraperService>();
+builder.Services.AddScoped<IPriceScrapingStrategy, PlaywrightScraperService>();
 builder.Services.AddScoped<PriceCheckingService>();
 builder.Services.AddScoped<TrackedProductCreationService>();
 
@@ -83,4 +91,6 @@ app.MapControllers();
 app.Run();
 
 public partial class Program { }
+
+
 

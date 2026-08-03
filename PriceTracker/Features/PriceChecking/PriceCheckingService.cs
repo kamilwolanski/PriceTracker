@@ -48,5 +48,3 @@ namespace PriceTracker.Features.PriceChecking
         }
     }
 }
-
-

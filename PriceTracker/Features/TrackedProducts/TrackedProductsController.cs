@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using PriceTracker.Features.PriceChecking;
 using PriceTracker.Features.TrackedProductCreation;
 using PriceTracker.Features.TrackedProducts.DTOs;
 using System.Security.Claims;
@@ -13,12 +14,16 @@ namespace PriceTracker.Features.TrackedProducts
     {
         private readonly TrackedProductService _trackedProductService;
         private readonly TrackedProductCreationService _trackedProductCreationService;
+        private readonly PriceCheckingService _priceCheckingService;
         public TrackedProductsController(
             TrackedProductService trackedProductService,
-            TrackedProductCreationService trackedProductCreationService)
+            TrackedProductCreationService trackedProductCreationService,
+            PriceCheckingService priceCheckingService
+            )
         {
             _trackedProductService = trackedProductService;
             _trackedProductCreationService = trackedProductCreationService;
+            _priceCheckingService = priceCheckingService;
         }
 
         private Guid GetUserId() => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
@@ -60,6 +65,30 @@ namespace PriceTracker.Features.TrackedProducts
                 new { id = result.Product!.Id },
                 result
             );
+        }
+
+        [HttpPost("{id}/check-price")]
+        public async Task<IActionResult> CheckPrice(Guid id)
+        {
+            var result = await _priceCheckingService.CheckPriceAsync(id, GetUserId());
+
+            if(result.Status == PriceCheckStatus.Success)
+            {
+                return Ok(result);
+            } 
+
+            if(result.Status == PriceCheckStatus.ProductNotFound)
+            {
+                return NotFound();
+            }
+
+            if(result.Status == PriceCheckStatus.ScrapeFailed)
+            {
+                return BadRequest();
+            }
+
+            return BadRequest();
+
         }
 
         [HttpPut("{id}")]
