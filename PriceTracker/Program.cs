@@ -13,7 +13,6 @@ using Scalar.AspNetCore;
 using System.Text;
 using PriceTracker.Features.PriceChecking.HtmlAgilityScraper;
 using PriceTracker.Features.PriceChecking.PlaywrightScraper;
-using PriceTracker.Features.PriceChecking.Strategies;
 using PriceTracker.Features.PriceChecking.WebsiteScrapers;
 
 
@@ -91,6 +90,7 @@ app.MapControllers();
 app.Run();
 
 public partial class Program { }
+
 
 
 

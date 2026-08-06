@@ -1,5 +1,5 @@
 using HtmlAgilityPack;
-using PriceTracker.Features.PriceChecking.Strategies;
+
 using System.Globalization;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -274,3 +274,4 @@ namespace PriceTracker.Features.PriceChecking.HtmlAgilityScraper
         }
     }
 }
+

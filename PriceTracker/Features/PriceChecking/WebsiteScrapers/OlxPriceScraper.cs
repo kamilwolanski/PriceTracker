@@ -1,4 +1,4 @@
-using PriceTracker.Features.PriceChecking.Strategies;
+
 
 namespace PriceTracker.Features.PriceChecking.WebsiteScrapers
 {
@@ -17,3 +17,4 @@ namespace PriceTracker.Features.PriceChecking.WebsiteScrapers
         }
     }
 }
+

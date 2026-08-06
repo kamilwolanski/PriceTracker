@@ -1,4 +1,4 @@
-namespace PriceTracker.Features.PriceChecking.Strategies
+namespace PriceTracker.Features.PriceChecking
 {
     public interface IPriceScrapingStrategy
     {
@@ -9,3 +9,4 @@ namespace PriceTracker.Features.PriceChecking.Strategies
         Task<decimal?> ScrapePriceAsync(Uri uri, CancellationToken cancellationToken = default);
     }
 }
+
