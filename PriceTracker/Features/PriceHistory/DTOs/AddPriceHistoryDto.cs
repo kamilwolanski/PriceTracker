@@ -1,4 +1,4 @@
-using System.ComponentModel.DataAnnotations;
+using PriceTracker.Features.PriceHistory.ValueObjects;
 
 namespace PriceTracker.Features.PriceHistory.DTOs
 {
@@ -6,7 +6,7 @@ namespace PriceTracker.Features.PriceHistory.DTOs
     {
         public Guid TrackedProductId { get; set; }
 
-        [Range(0.01, double.MaxValue, ErrorMessage = "Cena musi być większa od 0.")]
-        public decimal Price { get; set; }
+        public Money Price { get; set; }
     }
 }
+

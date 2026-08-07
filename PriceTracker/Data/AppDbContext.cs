@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using PriceTracker.Models;
 
 namespace PriceTracker.Data
@@ -13,9 +13,21 @@ namespace PriceTracker.Data
         public DbSet<User> Users { get; set; }
         public DbSet<RefreshToken> RefreshTokens { get; set; }
         public DbSet<TrackedProduct> TrackedProducts { get; set; }
-        public DbSet<PriceHistory> PriceHistories
+        public DbSet<PriceHistory> PriceHistories { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            get; set;
+            modelBuilder.Entity<PriceHistory>()
+                .ComplexProperty(p => p.Price, price =>
+                {
+                    price.Property(m => m.Amount)
+                        .HasPrecision(18, 2)
+                        .HasColumnName("PriceAmount");
+
+                    price.Property(m => m.CurrencyCode)
+                        .HasMaxLength(3)
+                        .HasColumnName("PriceCurrencyCode");
+                });
         }
-}
+    }
 }

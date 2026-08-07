@@ -1,3 +1,5 @@
+using PriceTracker.Features.PriceHistory.ValueObjects;
+
 namespace PriceTracker.Features.TrackedProducts.DTOs
 {
     public class TrackedProductDto
@@ -6,7 +8,7 @@ namespace PriceTracker.Features.TrackedProducts.DTOs
         public string Name { get; set; } = null!;
         public string Url { get; set; } = null!;
 
-        public decimal? CurrentPrice { get; set; }
+        public Money? CurrentPrice { get; set; }
         public DateTime? LastCheckedAt { get; set; }
     }
 }

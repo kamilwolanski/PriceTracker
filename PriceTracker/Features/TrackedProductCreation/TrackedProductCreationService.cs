@@ -1,6 +1,8 @@
 using PriceTracker.Features.PriceChecking;
+using PriceTracker.Features.PriceHistory;
 using PriceTracker.Features.TrackedProducts;
 using PriceTracker.Features.TrackedProducts.DTOs;
+using PriceTracker.Models;
 
 namespace PriceTracker.Features.TrackedProductCreation
 {
@@ -8,19 +10,23 @@ namespace PriceTracker.Features.TrackedProductCreation
     {
         private readonly PriceCheckingService _priceCheckingService;
         private readonly TrackedProductService _trackedProductService;
-        public TrackedProductCreationService(TrackedProductService trackedProductService, PriceCheckingService priceCheckingService)
+        private readonly PriceHistoryService _priceHistoryService;
+        public TrackedProductCreationService(TrackedProductService trackedProductService, PriceCheckingService priceCheckingService, PriceHistoryService priceHistoryService)
         {
             _priceCheckingService = priceCheckingService;
             _trackedProductService = trackedProductService;
+            _priceHistoryService = priceHistoryService;
         }
 
         public async Task<CreateTrackedProductResult> CreateAsync(CreateTrackedProductDto dto, Guid userId)
         {
-            var newProduct = await _trackedProductService.AddAsync(dto, userId);
-
-            var checkedPrice = await _priceCheckingService.CheckPriceAsync(newProduct.Id, userId);
-            if (checkedPrice.Status == PriceCheckStatus.Success)
+            var checkedPrice = await _priceCheckingService.CheckPriceAsync(dto.Url);
+            if (checkedPrice.Status == PriceCheckStatus.Success && checkedPrice.Money != null)
             {
+                var price = checkedPrice.Money.Value;
+                var newProduct = await _trackedProductService.AddAsync(dto, userId);
+                var history = await _priceHistoryService.AddFromCheckAsync(newProduct.Id, price);
+
                 return new CreateTrackedProductResult
                 {
                     Success = true,
@@ -29,8 +35,8 @@ namespace PriceTracker.Features.TrackedProductCreation
                         Id = newProduct.Id,
                         Name = newProduct.Name,
                         Url = newProduct.Url,
-                        CurrentPrice = checkedPrice.History?.Price,
-                        LastCheckedAt = checkedPrice.History?.CheckedAt
+                        CurrentPrice = price,
+                        LastCheckedAt = history.CheckedAt,
                     },
                     InitialPriceChecked = true,
                 };
@@ -38,8 +44,8 @@ namespace PriceTracker.Features.TrackedProductCreation
 
             return new CreateTrackedProductResult
             {
-                Success = true,
-                Product = newProduct,
+                Success = false,
+                Product = null,
                 InitialPriceChecked = false,
                 Error = checkedPrice.Error
             };

@@ -1,3 +1,4 @@
+using PriceTracker.Features.PriceHistory.ValueObjects;
 
 
 namespace PriceTracker.Features.PriceChecking.WebsiteScrapers
@@ -11,10 +12,11 @@ namespace PriceTracker.Features.PriceChecking.WebsiteScrapers
             return uri.Host.EndsWith("x-kom.pl", StringComparison.OrdinalIgnoreCase);
         }
 
-        public Task<decimal?> ScrapePriceAsync(Uri uri, CancellationToken cancellationToken = default)
+        public Task<Money?> ScrapePriceAsync(Uri uri, CancellationToken cancellationToken = default)
         {
-            return Task.FromResult<decimal?>(null);
+            return Task.FromResult<Money?>(null);
         }
     }
 }
+
 

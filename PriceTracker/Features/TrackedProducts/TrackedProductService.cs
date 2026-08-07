@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using PriceTracker.Data;
 using PriceTracker.Features.PriceHistory.DTOs;
+using PriceTracker.Features.PriceHistory.ValueObjects;
 using PriceTracker.Features.TrackedProducts.DTOs;
 using PriceTracker.Models;
 
@@ -25,7 +26,7 @@ namespace PriceTracker.Features.TrackedProducts
                     Url = tp.Url,
                     CurrentPrice = tp.PriceHistory
                         .OrderByDescending(ph => ph.CheckedAt)
-                        .Select(ph => (decimal?)ph.Price)
+                        .Select(ph => (Money?)ph.Price)
                         .FirstOrDefault(),
                     LastCheckedAt = tp.PriceHistory
                         .OrderByDescending(ph => ph.CheckedAt)
@@ -46,7 +47,7 @@ namespace PriceTracker.Features.TrackedProducts
                     Url = tp.Url,
                     CurrentPrice = tp.PriceHistory
                         .OrderByDescending(ph => ph.CheckedAt)
-                        .Select(ph => (decimal?)ph.Price)
+                        .Select(ph => (Money?)ph.Price)
                         .FirstOrDefault(),
                     LastCheckedAt = tp.PriceHistory
                         .OrderByDescending(ph => ph.CheckedAt)

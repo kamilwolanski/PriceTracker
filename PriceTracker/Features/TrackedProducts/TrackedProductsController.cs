@@ -60,6 +60,11 @@ namespace PriceTracker.Features.TrackedProducts
         {
             var result = await _trackedProductCreationService.CreateAsync(product, GetUserId());
 
+            if (!result.Success)
+            {
+                return BadRequest(result);
+            }
+
             return CreatedAtAction(
                 nameof(GetById),
                 new { id = result.Product!.Id },

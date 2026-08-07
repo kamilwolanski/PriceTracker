@@ -1,4 +1,5 @@
 using PriceTracker.Features.PriceHistory;
+using PriceTracker.Features.PriceHistory.ValueObjects;
 using PriceTracker.Features.TrackedProducts;
 
 namespace PriceTracker.Features.PriceChecking
@@ -7,7 +8,6 @@ namespace PriceTracker.Features.PriceChecking
     {
         private readonly IPriceScraper _scraper;
         private readonly TrackedProductService _trackedProductService;
-        private readonly PriceHistoryService _priceHistoryService;
 
         public PriceCheckingService(
             IPriceScraper scraper,
@@ -16,19 +16,14 @@ namespace PriceTracker.Features.PriceChecking
         {
             _scraper = scraper;
             _trackedProductService = trackedProductService;
-            _priceHistoryService = priceHistoryService;
         }
 
-        public async Task<PriceCheckResult> CheckPriceAsync(Guid trackedProductId, Guid userId)
+        private async Task<PriceCheckResult> CheckPriceInternal(string url)
         {
-            var product = await _trackedProductService.GetByIdAsync(trackedProductId, userId);
-            if (product == null)
-                return PriceCheckResult.NotFound();
-
-            decimal? scrapedPrice;
+            Money? scrapedPrice;
             try
             {
-                scrapedPrice = await _scraper.ScrapePriceAsync(product.Url);
+                scrapedPrice = await _scraper.ScrapePriceAsync(url);
             }
             catch
             {
@@ -38,13 +33,26 @@ namespace PriceTracker.Features.PriceChecking
             if (scrapedPrice == null)
                 return PriceCheckResult.ScrapeFailed();
 
-            var history = await _priceHistoryService.AddFromCheckAsync(
-                trackedProductId, scrapedPrice.Value, userId);
 
-            if (history == null)
+            return PriceCheckResult.Ok(scrapedPrice.Value);
+        }
+
+        public async Task<PriceCheckResult> CheckPriceAsync(Guid id, Guid userId)
+        {
+            var trackedProduct = await _trackedProductService.GetByIdAsync(id, userId);
+
+            if(trackedProduct is null)
+            {
                 return PriceCheckResult.NotFound();
+            }
 
-            return PriceCheckResult.Ok(history);
+            return await CheckPriceInternal(trackedProduct.Url);
+
+        }
+
+        public async Task<PriceCheckResult> CheckPriceAsync(string url)
+        {
+            return await CheckPriceInternal(url);
         }
     }
 }

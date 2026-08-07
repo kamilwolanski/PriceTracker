@@ -1,4 +1,5 @@
 ﻿using PriceTracker.Features.PriceHistory.DTOs;
+using PriceTracker.Features.PriceHistory.ValueObjects;
 
 namespace PriceTracker.Features.PriceChecking
 {
@@ -12,15 +13,13 @@ namespace PriceTracker.Features.PriceChecking
     {
         public PriceCheckStatus Status { get; set; }
         
-        public PriceHistoryDto? History { get; set; }
+        public Money? Money { get; set; }
         public string? Error { get; set; }
 
-        public static PriceCheckResult Ok(PriceHistoryDto history) =>
-            new PriceCheckResult { Status = PriceCheckStatus.Success, History = history };
-
+        public static PriceCheckResult Ok(Money money) =>
+            new PriceCheckResult { Status = PriceCheckStatus.Success, Money = money };
         public static PriceCheckResult NotFound() =>
             new PriceCheckResult { Status = PriceCheckStatus.ProductNotFound, Error = "Product not found." };
-
         public static PriceCheckResult ScrapeFailed() =>
             new PriceCheckResult { Status = PriceCheckStatus.ScrapeFailed, Error = "Could not scrape price." };
     }

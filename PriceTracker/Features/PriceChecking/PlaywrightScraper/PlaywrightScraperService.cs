@@ -1,5 +1,6 @@
 using Microsoft.Playwright;
 using PriceTracker.Features.PriceChecking.HtmlAgilityScraper;
+using PriceTracker.Features.PriceHistory.ValueObjects;
 
 
 namespace PriceTracker.Features.PriceChecking.PlaywrightScraper
@@ -10,7 +11,7 @@ namespace PriceTracker.Features.PriceChecking.PlaywrightScraper
 
         public bool CanHandle(Uri uri) => true;
 
-        public async Task<decimal?> ScrapePriceAsync(Uri uri, CancellationToken cancellationToken = default)
+        public async Task<Money?> ScrapePriceAsync(Uri uri, CancellationToken cancellationToken = default)
         {
             using var playwright = await Playwright.CreateAsync();
             await using var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
@@ -39,6 +40,7 @@ namespace PriceTracker.Features.PriceChecking.PlaywrightScraper
         private static async Task WriteDebugFilesAsync(Uri uri, string html, CancellationToken cancellationToken)
         {
             var debugDirectory = Path.Combine(@"C:\tmp", "PriceTracker");
+            Console.WriteLine($"Saving debug to: {debugDirectory}");
             Directory.CreateDirectory(debugDirectory);
             await File.WriteAllTextAsync(
                 Path.Combine(debugDirectory, "playwright-debug.html"),

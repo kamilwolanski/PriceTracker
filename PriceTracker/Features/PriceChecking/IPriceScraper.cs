@@ -1,7 +1,9 @@
-﻿namespace PriceTracker.Features.PriceChecking
+﻿using PriceTracker.Features.PriceHistory.ValueObjects;
+
+namespace PriceTracker.Features.PriceChecking
 {
     public interface IPriceScraper
     {
-        Task<decimal?> ScrapePriceAsync(string url, CancellationToken cancellationToken = default);
+        Task<Money?> ScrapePriceAsync(string url, CancellationToken cancellationToken = default);
     }
 }

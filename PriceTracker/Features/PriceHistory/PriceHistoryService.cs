@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using PriceTracker.Data;
 using PriceTracker.Features.PriceHistory.DTOs;
+using PriceTracker.Features.PriceHistory.ValueObjects;
 using PriceTracker.Models;
 
 namespace PriceTracker.Features.PriceHistory
@@ -35,11 +36,8 @@ namespace PriceTracker.Features.PriceHistory
             return await AddEntryAsync(dto.TrackedProductId, dto.Price);
         }
 
-        public async Task<PriceHistoryDto?> AddFromCheckAsync(Guid trackedProductId, decimal price, Guid userId)
+        public async Task<PriceHistoryDto> AddFromCheckAsync(Guid trackedProductId, Money price)
         {
-            if (!await ProductBelongsToUserAsync(trackedProductId, userId))
-                return null;
-
             return await AddEntryAsync(trackedProductId, price);
         }
 
@@ -49,7 +47,7 @@ namespace PriceTracker.Features.PriceHistory
                 .AnyAsync(tp => tp.Id == trackedProductId && tp.UserId == userId);
         }
 
-        private async Task<PriceHistoryDto> AddEntryAsync(Guid trackedProductId, decimal price)
+        private async Task<PriceHistoryDto> AddEntryAsync(Guid trackedProductId, Money price)
         {
             var priceHistory = new Models.PriceHistory
             {
