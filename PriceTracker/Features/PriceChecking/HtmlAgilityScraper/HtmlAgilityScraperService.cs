@@ -1,4 +1,5 @@
 using HtmlAgilityPack;
+using PriceTracker.Features.PriceHistory.ValueObjects;
 
 using System.Globalization;
 using System.Text.Json;
@@ -12,7 +13,7 @@ namespace PriceTracker.Features.PriceChecking.HtmlAgilityScraper
 
         public bool CanHandle(Uri uri) => true;
 
-        public async Task<decimal?> ScrapePriceAsync(Uri uri, CancellationToken cancellationToken = default)
+        public async Task<Money?> ScrapePriceAsync(Uri uri, CancellationToken cancellationToken = default)
         {
             using var client = new HttpClient();
             using var request = new HttpRequestMessage(HttpMethod.Get, uri);
@@ -28,12 +29,12 @@ namespace PriceTracker.Features.PriceChecking.HtmlAgilityScraper
             return TryExtractPriceFromHtml(html);
         }
 
-        public static decimal? TryExtractPriceFromHtml(string html)
+        public static Money? TryExtractPriceFromHtml(string html, string defaultCurrencyCode = "PLN")
         {
             var doc = new HtmlDocument();
             doc.LoadHtml(html);
 
-            var jsonLdPrice = TryGetPriceFromJsonLd(doc);
+            var jsonLdPrice = TryGetPriceFromJsonLd(doc, defaultCurrencyCode);
             if (jsonLdPrice != null)
                 return jsonLdPrice;
 
@@ -50,13 +51,19 @@ namespace PriceTracker.Features.PriceChecking.HtmlAgilityScraper
                 ?? GetAttributeValueOrNull(
                     doc.DocumentNode.SelectSingleNode("//meta[@name='og:price:amount']"),
                     "content")
+                ??  GetAttributeValueOrNull(
+                    doc.DocumentNode.SelectSingleNode("//meta[@property='product:sale_price:amount']"),
+                    "content")
                 ?? GetAttributeValueOrNull(
                     doc.DocumentNode.SelectSingleNode("//*[@itemprop='price']"),
                     "content")
                 ?? doc.DocumentNode.SelectSingleNode("//*[@itemprop='price']")
+
                     ?.InnerText;
 
-            return ParsePrice(priceText);
+
+            var currencyCode = GetCurrencyCodeFromHtml(doc) ?? defaultCurrencyCode;
+            return CurrencyParser.TryParse(priceText, currencyCode);
         }
 
         private static void AddBrowserLikeHeaders(HttpRequestMessage request)
@@ -73,6 +80,7 @@ namespace PriceTracker.Features.PriceChecking.HtmlAgilityScraper
             CancellationToken cancellationToken)
         {
             var debugDirectory = Path.Combine(@"C:\tmp", "PriceTracker");
+            Console.WriteLine($"Saving debug to: {debugDirectory}");
             Directory.CreateDirectory(debugDirectory);
             await File.WriteAllTextAsync(
                 Path.Combine(debugDirectory, "scraper-debug.html"),
@@ -90,7 +98,7 @@ namespace PriceTracker.Features.PriceChecking.HtmlAgilityScraper
             return string.IsNullOrWhiteSpace(value) ? null : value;
         }
 
-        private static decimal? TryGetPriceFromJsonLd(HtmlDocument doc)
+        private static Money? TryGetPriceFromJsonLd(HtmlDocument doc, string defaultCurrencyCode)
         {
             var jsonLdNodes = doc.DocumentNode.SelectNodes("//script[@type='application/ld+json']");
             if (jsonLdNodes == null)
@@ -102,7 +110,7 @@ namespace PriceTracker.Features.PriceChecking.HtmlAgilityScraper
                 if (string.IsNullOrWhiteSpace(json))
                     continue;
 
-                var price = TryExtractPriceFromJsonLd(json);
+                var price = TryExtractPriceFromJsonLd(json, defaultCurrencyCode);
                 if (price != null)
                     return price;
             }
@@ -110,12 +118,12 @@ namespace PriceTracker.Features.PriceChecking.HtmlAgilityScraper
             return null;
         }
 
-        private static decimal? TryExtractPriceFromJsonLd(string json)
+        private static Money? TryExtractPriceFromJsonLd(string json, string defaultCurrencyCode)
         {
             try
             {
                 using var document = JsonDocument.Parse(json);
-                return FindProductPrice(document.RootElement);
+                return FindProductPrice(document.RootElement, defaultCurrencyCode);
             }
             catch (JsonException)
             {
@@ -123,27 +131,27 @@ namespace PriceTracker.Features.PriceChecking.HtmlAgilityScraper
             }
         }
 
-        private static decimal? FindProductPrice(JsonElement element)
+        private static Money? FindProductPrice(JsonElement element, string defaultCurrencyCode)
         {
             if (element.ValueKind == JsonValueKind.Object)
             {
                 if (IsProduct(element))
                 {
-                    var productPrice = TryGetPriceFromProduct(element);
+                    var productPrice = TryGetPriceFromProduct(element, defaultCurrencyCode);
                     if (productPrice != null)
                         return productPrice;
                 }
 
                 if (element.TryGetProperty("@graph", out var graph))
                 {
-                    var graphPrice = FindProductPrice(graph);
+                    var graphPrice = FindProductPrice(graph, defaultCurrencyCode);
                     if (graphPrice != null)
                         return graphPrice;
                 }
 
                 foreach (var property in element.EnumerateObject())
                 {
-                    var nestedPrice = FindProductPrice(property.Value);
+                    var nestedPrice = FindProductPrice(property.Value, defaultCurrencyCode);
                     if (nestedPrice != null)
                         return nestedPrice;
                 }
@@ -153,7 +161,7 @@ namespace PriceTracker.Features.PriceChecking.HtmlAgilityScraper
             {
                 foreach (var item in element.EnumerateArray())
                 {
-                    var price = FindProductPrice(item);
+                    var price = FindProductPrice(item, defaultCurrencyCode);
                     if (price != null)
                         return price;
                 }
@@ -180,30 +188,30 @@ namespace PriceTracker.Features.PriceChecking.HtmlAgilityScraper
             return false;
         }
 
-        private static decimal? TryGetPriceFromProduct(JsonElement product)
+        private static Money? TryGetPriceFromProduct(JsonElement product, string defaultCurrencyCode)
         {
             if (!product.TryGetProperty("offers", out var offers))
                 return null;
 
-            return TryGetPriceFromOffers(offers);
+            return TryGetPriceFromOffers(offers, defaultCurrencyCode);
         }
 
-        private static decimal? TryGetPriceFromOffers(JsonElement offers)
+        private static Money? TryGetPriceFromOffers(JsonElement offers, string defaultCurrencyCode)
         {
             if (offers.ValueKind == JsonValueKind.Object)
             {
                 if (offers.TryGetProperty("price", out var price))
-                    return ParsePrice(price);
+                    return ParseJsonPrice(price, offers, defaultCurrencyCode);
 
                 if (offers.TryGetProperty("lowPrice", out var lowPrice))
-                    return ParsePrice(lowPrice);
+                    return ParseJsonPrice(lowPrice, offers, defaultCurrencyCode);
             }
 
             if (offers.ValueKind == JsonValueKind.Array)
             {
                 foreach (var offer in offers.EnumerateArray())
                 {
-                    var price = TryGetPriceFromOffers(offer);
+                    var price = TryGetPriceFromOffers(offer, defaultCurrencyCode);
                     if (price != null)
                         return price;
                 }
@@ -212,66 +220,50 @@ namespace PriceTracker.Features.PriceChecking.HtmlAgilityScraper
             return null;
         }
 
-        private static decimal? ParsePrice(JsonElement element)
+        private static string? GetCurrencyCodeFromHtml(HtmlDocument doc)
         {
-            if (element.ValueKind == JsonValueKind.Number)
-                return element.GetDecimal();
-
-            if (element.ValueKind == JsonValueKind.String)
-                return ParsePrice(element.GetString());
-
-            return null;
+            return GetAttributeValueOrNull(
+                    doc.DocumentNode.SelectSingleNode("//meta[@property='product:price:currency']"),
+                    "content")
+                ?? GetAttributeValueOrNull(
+                    doc.DocumentNode.SelectSingleNode("//meta[@name='product:price:currency']"),
+                    "content")
+                ?? GetAttributeValueOrNull(
+                    doc.DocumentNode.SelectSingleNode("//meta[@property='og:price:currency']"),
+                    "content")
+                ?? GetAttributeValueOrNull(
+                    doc.DocumentNode.SelectSingleNode("//meta[@name='og:price:currency']"),
+                    "content")
+                ?? GetAttributeValueOrNull(
+                    doc.DocumentNode.SelectSingleNode("//*[@itemprop='priceCurrency']"),
+                    "content")
+                ?? doc.DocumentNode.SelectSingleNode("//*[@itemprop='priceCurrency']")
+                    ?.InnerText;
         }
 
-        private static decimal? ParsePrice(string? text)
+        private static Money? ParseJsonPrice(JsonElement priceElement, JsonElement offerElement, string defaultCurrencyCode)
         {
-            if (string.IsNullOrWhiteSpace(text))
-                return null;
-
-            var cleaned = Regex.Replace(text, @"[^\d,.]", "");
-            if (string.IsNullOrWhiteSpace(cleaned))
-                return null;
-
-            var commaIndex = cleaned.LastIndexOf(',');
-            var dotIndex = cleaned.LastIndexOf('.');
-
-            if (commaIndex >= 0 && dotIndex >= 0)
+            var priceText = priceElement.ValueKind switch
             {
-                cleaned = commaIndex > dotIndex
-                    ? cleaned.Replace(".", "").Replace(',', '.')
-                    : cleaned.Replace(",", "");
-            }
-            else if (commaIndex >= 0)
-            {
-                cleaned = NormalizeSingleSeparator(cleaned, commaIndex, ',');
-            }
-            else if (dotIndex >= 0)
-            {
-                cleaned = NormalizeSingleSeparator(cleaned, dotIndex, '.');
-            }
+                JsonValueKind.Number => priceElement.GetDecimal().ToString(CultureInfo.InvariantCulture),
+                JsonValueKind.String => priceElement.GetString(),
+                _ => null
+            };
 
-            if (decimal.TryParse(
-                cleaned,
-                NumberStyles.Number,
-                CultureInfo.InvariantCulture,
-                out var price))
-            {
-                return price;
-            }
-
-            return null;
+            var currencyCode = TryGetJsonStringProperty(offerElement, "priceCurrency") ?? defaultCurrencyCode;
+            return CurrencyParser.TryParse(priceText, currencyCode);
         }
 
-        private static string NormalizeSingleSeparator(string value, int separatorIndex, char separator)
+        private static string? TryGetJsonStringProperty(JsonElement element, string propertyName)
         {
-            var digitsAfterSeparator = value.Length - separatorIndex - 1;
-            if (digitsAfterSeparator == 3)
-                return value.Replace(separator.ToString(), "");
-
-            return separator == ','
-                ? value.Replace(',', '.')
-                : value;
+            return element.ValueKind == JsonValueKind.Object &&
+                element.TryGetProperty(propertyName, out var property) &&
+                property.ValueKind == JsonValueKind.String
+                    ? property.GetString()
+                    : null;
         }
     }
 }
+
+
 
