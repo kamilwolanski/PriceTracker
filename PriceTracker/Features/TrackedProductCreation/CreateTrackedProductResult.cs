@@ -1,12 +1,16 @@
-﻿using PriceTracker.Features.TrackedProducts.DTOs;
+﻿using PriceTracker.Features.PriceChecking;
+using PriceTracker.Features.TrackedProducts.DTOs;
 
 namespace PriceTracker.Features.TrackedProductCreation
 {
+    public enum CreateTrackedProductStatus
+    {
+        Success,
+        ScrapeFailed
+    }
     public class CreateTrackedProductResult
     {
-        public bool Success { get; set; }
         public TrackedProductDto? Product { get; set; }
-        public bool InitialPriceChecked { get; set; }
-        public string? Error { get; set; }
+        public CreateTrackedProductStatus  Status { get; set; }
     }
 }

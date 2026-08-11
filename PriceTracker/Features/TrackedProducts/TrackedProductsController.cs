@@ -58,18 +58,29 @@ namespace PriceTracker.Features.TrackedProducts
         [HttpPost]
         public async Task<IActionResult> AddTrackedProduct([FromBody] CreateTrackedProductDto product)
         {
-            var result = await _trackedProductCreationService.CreateAsync(product, GetUserId());
+            var result = await _trackedProductCreationService.CreateAsync(
+                product,
+                GetUserId());
 
-            if (!result.Success)
+            if (result.Status == CreateTrackedProductStatus.Success)
             {
-                return BadRequest(result);
+                return CreatedAtAction(
+                    nameof(GetById),
+                    new { id = result.Product!.Id },
+                    result.Product
+                );
             }
 
-            return CreatedAtAction(
-                nameof(GetById),
-                new { id = result.Product!.Id },
-                result
-            );
+            if (result.Status == CreateTrackedProductStatus.ScrapeFailed)
+            {
+                return Problem(
+                   statusCode: StatusCodes.Status502BadGateway,
+                   title: "Price scraping failed",
+                   detail: "Could not scrape the product price."
+               );
+            }
+
+            return StatusCode(StatusCodes.Status500InternalServerError);
         }
 
         [HttpPost("{id}/check-price")]

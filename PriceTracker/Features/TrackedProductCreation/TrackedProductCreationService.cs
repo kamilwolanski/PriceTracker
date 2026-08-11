@@ -29,7 +29,7 @@ namespace PriceTracker.Features.TrackedProductCreation
 
                 return new CreateTrackedProductResult
                 {
-                    Success = true,
+                    Status = CreateTrackedProductStatus.Success,
                     Product = new TrackedProductDto
                     {
                         Id = newProduct.Id,
@@ -38,16 +38,12 @@ namespace PriceTracker.Features.TrackedProductCreation
                         CurrentPrice = price,
                         LastCheckedAt = history.CheckedAt,
                     },
-                    InitialPriceChecked = true,
                 };
             }
 
             return new CreateTrackedProductResult
             {
-                Success = false,
-                Product = null,
-                InitialPriceChecked = false,
-                Error = checkedPrice.Error
+                Status = CreateTrackedProductStatus.ScrapeFailed,
             };
         }
     }
