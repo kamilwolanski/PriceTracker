@@ -86,25 +86,28 @@ namespace PriceTracker.Features.TrackedProducts
         [HttpPost("{id}/check-price")]
         public async Task<IActionResult> CheckPrice(Guid id)
         {
-            var result = await _priceCheckingService.CheckPriceAsync(id, GetUserId());
+            var result = await _priceCheckingService.CheckPriceAsync(
+                id,
+                GetUserId());
 
-            if(result.Status == PriceCheckStatus.Success)
+            if (result.Status == PriceCheckStatus.Success)
             {
                 return Ok(result);
-            } 
-
-            if(result.Status == PriceCheckStatus.ProductNotFound)
-            {
-                return NotFound();
             }
 
-            if(result.Status == PriceCheckStatus.ScrapeFailed)
+            if (result.Status == PriceCheckStatus.ProductNotFound)
             {
-                return BadRequest();
+                return NotFound(result);
             }
 
-            return BadRequest();
+            if (result.Status == PriceCheckStatus.ScrapeFailed)
+            {
+                return StatusCode(
+                    StatusCodes.Status502BadGateway,
+                    result);
+            }
 
+            return StatusCode(StatusCodes.Status500InternalServerError);
         }
 
         [HttpPut("{id}")]

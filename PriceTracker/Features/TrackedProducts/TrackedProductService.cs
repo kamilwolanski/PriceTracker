@@ -28,12 +28,14 @@ namespace PriceTracker.Features.TrackedProducts
                         .OrderByDescending(ph => ph.CheckedAt)
                         .Select(ph => (Money?)ph.Price)
                         .FirstOrDefault(),
-                    LastCheckedAt = tp.PriceHistory
-                        .OrderByDescending(ph => ph.CheckedAt)
-                        .Select(ph => (DateTime?)ph.CheckedAt)
-                        .FirstOrDefault(),
+                    LastCheckedAt = tp.LastCheckedAt
                 })
                 .ToListAsync();
+        }
+
+        public async Task<IEnumerable<TrackedProduct>> GetProductsForPriceCheckAsync()
+        {
+            return await _context.TrackedProducts.ToListAsync();
         }
 
         public async Task<TrackedProductDto?> GetByIdAsync(Guid id, Guid userId)
@@ -113,6 +115,7 @@ namespace PriceTracker.Features.TrackedProducts
 
             return await GetByIdAsync(id, userId);
         }
+
 
         public async Task<bool> DeleteAsync(Guid id, Guid userId)
         {

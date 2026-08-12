@@ -12,15 +12,29 @@ namespace PriceTracker.Features.PriceChecking
     public class PriceCheckResult
     {
         public PriceCheckStatus Status { get; set; }
-        
-        public Money? Money { get; set; }
+        public Money? Price { get; set; }
         public string? Error { get; set; }
+        public DateTime? CheckedAt { get; set; }
 
         public static PriceCheckResult Ok(Money money) =>
-            new PriceCheckResult { Status = PriceCheckStatus.Success, Money = money };
+            new PriceCheckResult
+            {
+                Status = PriceCheckStatus.Success,
+                Price = money
+            };
+
         public static PriceCheckResult NotFound() =>
-            new PriceCheckResult { Status = PriceCheckStatus.ProductNotFound, Error = "Product not found." };
+            new PriceCheckResult
+            {
+                Status = PriceCheckStatus.ProductNotFound,
+                Error = "Product not found."
+            };
+
         public static PriceCheckResult ScrapeFailed() =>
-            new PriceCheckResult { Status = PriceCheckStatus.ScrapeFailed, Error = "Could not scrape price." };
+            new PriceCheckResult
+            {
+                Status = PriceCheckStatus.ScrapeFailed,
+                Error = "Could not scrape price."
+            };
     }
 }

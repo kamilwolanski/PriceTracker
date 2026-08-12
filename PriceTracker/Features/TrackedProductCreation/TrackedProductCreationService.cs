@@ -21,11 +21,15 @@ namespace PriceTracker.Features.TrackedProductCreation
         public async Task<CreateTrackedProductResult> CreateAsync(CreateTrackedProductDto dto, Guid userId)
         {
             var checkedPrice = await _priceCheckingService.CheckPriceAsync(dto.Url);
-            if (checkedPrice.Status == PriceCheckStatus.Success && checkedPrice.Money != null)
+            if (checkedPrice.Status == PriceCheckStatus.Success && checkedPrice.Price != null)
             {
-                var price = checkedPrice.Money.Value;
+                var price = checkedPrice.Price.Value;
+
                 var newProduct = await _trackedProductService.AddAsync(dto, userId);
-                var history = await _priceHistoryService.AddFromCheckAsync(newProduct.Id, price);
+
+                var checkedAt = await _priceHistoryService.AddPriceCheckAsync(
+                    newProduct.Id,
+                    price);
 
                 return new CreateTrackedProductResult
                 {
@@ -36,7 +40,7 @@ namespace PriceTracker.Features.TrackedProductCreation
                         Name = newProduct.Name,
                         Url = newProduct.Url,
                         CurrentPrice = price,
-                        LastCheckedAt = history.CheckedAt,
+                        LastCheckedAt = checkedAt
                     },
                 };
             }

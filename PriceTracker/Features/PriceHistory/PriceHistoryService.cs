@@ -28,18 +28,23 @@ namespace PriceTracker.Features.PriceHistory
                 .FirstOrDefaultAsync();
         }
 
-        public async Task<PriceHistoryDto?> AddAsync(AddPriceHistoryDto dto, Guid userId)
+        public async Task<PriceHistoryDto?> AddAsync(
+            AddPriceHistoryDto dto,
+            Guid userId)
         {
             if (!await ProductBelongsToUserAsync(dto.TrackedProductId, userId))
                 return null;
 
-            return await AddEntryAsync(dto.TrackedProductId, dto.Price);
+            var history = AddEntry(
+                dto.TrackedProductId,
+                dto.Price,
+                DateTime.UtcNow);
+
+            await _context.SaveChangesAsync();
+
+            return history;
         }
 
-        public async Task<PriceHistoryDto> AddFromCheckAsync(Guid trackedProductId, Money price)
-        {
-            return await AddEntryAsync(trackedProductId, price);
-        }
 
         private async Task<bool> ProductBelongsToUserAsync(Guid trackedProductId, Guid userId)
         {
@@ -47,18 +52,20 @@ namespace PriceTracker.Features.PriceHistory
                 .AnyAsync(tp => tp.Id == trackedProductId && tp.UserId == userId);
         }
 
-        private async Task<PriceHistoryDto> AddEntryAsync(Guid trackedProductId, Money price)
+        private PriceHistoryDto AddEntry(
+            Guid trackedProductId,
+            Money price,
+            DateTime checkedAt)
         {
             var priceHistory = new Models.PriceHistory
             {
                 Id = Guid.NewGuid(),
                 Price = price,
-                CheckedAt = DateTime.UtcNow,
+                CheckedAt = checkedAt,
                 TrackedProductId = trackedProductId
             };
 
-            _context.Add(priceHistory);
-            await _context.SaveChangesAsync();
+            _context.PriceHistories.Add(priceHistory);
 
             return new PriceHistoryDto
             {
@@ -67,6 +74,36 @@ namespace PriceTracker.Features.PriceHistory
                 CheckedAt = priceHistory.CheckedAt,
                 TrackedProductId = priceHistory.TrackedProductId
             };
+        }
+
+        public async Task<DateTime> AddPriceCheckAsync(
+            Guid trackedProductId,
+            Money price)
+        {
+            var trackedProduct = await _context.TrackedProducts
+                .FirstOrDefaultAsync(tp => tp.Id == trackedProductId);
+
+            if (trackedProduct == null)
+                throw new InvalidOperationException("Tracked product not found.");
+
+            var checkedAt = DateTime.UtcNow;
+
+            trackedProduct.LastCheckedAt = checkedAt;
+
+            var lastPrice = await _context.PriceHistories
+                .Where(ph => ph.TrackedProductId == trackedProductId)
+                .OrderByDescending(ph => ph.CheckedAt)
+                .Select(ph => ph.Price)
+                .FirstOrDefaultAsync();
+
+            if (lastPrice != price)
+            {
+                AddEntry(trackedProductId, price, checkedAt);
+            }
+
+            await _context.SaveChangesAsync();
+
+            return checkedAt;
         }
 
         public async Task<PriceHistoryDto?> UpdateAsync(Guid id, UpdatePriceHistoryDto dto, Guid userId)
