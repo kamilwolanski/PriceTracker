@@ -19,10 +19,8 @@ namespace PriceTracker.Features.PriceMonitoring
         {
             while (!stoppingToken.IsCancellationRequested)
             {
-                try
+                using (var scope = _scopeFactory.CreateScope())
                 {
-                    using var scope = _scopeFactory.CreateScope();
-
                     var trackedProductService =
                         scope.ServiceProvider
                             .GetRequiredService<TrackedProductService>();
@@ -35,38 +33,40 @@ namespace PriceTracker.Features.PriceMonitoring
                         scope.ServiceProvider
                             .GetRequiredService<PriceHistoryService>();
 
-                    var products =
-                        await trackedProductService
-                            .GetProductsForPriceCheckAsync();
+                    var skip = 0;
+                    const int batchSize = 100;
 
-                    foreach (var product in products)
+                    while (true)
                     {
-                        var result =
-                            await priceCheckingService
-                                .CheckPriceAsync(product.Url);
+                        var products =
+                            await trackedProductService
+                                .GetProductsForPriceCheckAsync(
+                                    skip,
+                                    batchSize);
 
-                        if (result.Status == PriceCheckStatus.Success &&
-                            result.Price != null)
-                        {
-                            await priceHistoryService.AddPriceCheckAsync(
-                                product.Id,
-                                result.Price.Value);
+                        if (products.Count == 0)
+                            break;
 
-                            Console.WriteLine(
-                                $"Price checked: {product.Name}");
-                        }
-                        else
+                        foreach (var product in products)
                         {
-                            Console.WriteLine(
-                                $"Price check failed: {product.Name} - {result.Error}");
+                            var checkedPrice =
+                                await priceCheckingService
+                                    .CheckPriceAsync(product.Url);
+
+                            if (checkedPrice.Status == PriceCheckStatus.Success &&
+                                checkedPrice.Price != null)
+                            {
+                                await priceHistoryService.AddPriceCheckAsync(
+                                    product.Id,
+                                    checkedPrice.Price.Value);
+                            }
                         }
+
+                        skip += batchSize;
                     }
                 }
-                catch (Exception ex)
-                {
-                    Console.WriteLine(
-                        $"Price monitoring failed: {ex.Message}");
-                }
+
+                Console.WriteLine("Price check finished.");
 
                 await Task.Delay(
                     TimeSpan.FromSeconds(30),

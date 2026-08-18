@@ -33,9 +33,15 @@ namespace PriceTracker.Features.TrackedProducts
                 .ToListAsync();
         }
 
-        public async Task<IEnumerable<TrackedProduct>> GetProductsForPriceCheckAsync()
+        public async Task<List<TrackedProduct>> GetProductsForPriceCheckAsync(
+            int skip,
+            int take)
         {
-            return await _context.TrackedProducts.ToListAsync();
+            return await _context.TrackedProducts
+                .OrderBy(tp => tp.Id)
+                .Skip(skip)
+                .Take(take)
+                .ToListAsync();
         }
 
         public async Task<TrackedProductDto?> GetByIdAsync(Guid id, Guid userId)
