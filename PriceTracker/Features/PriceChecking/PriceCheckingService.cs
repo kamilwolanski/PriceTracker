@@ -1,5 +1,4 @@
 using PriceTracker.Features.PriceHistory;
-using PriceTracker.Features.PriceHistory;
 using PriceTracker.Features.PriceHistory.ValueObjects;
 using PriceTracker.Features.TrackedProducts;
 

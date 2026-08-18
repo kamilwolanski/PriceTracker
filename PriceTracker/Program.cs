@@ -14,6 +14,7 @@ using System.Text;
 using PriceTracker.Features.PriceChecking.HtmlAgilityScraper;
 using PriceTracker.Features.PriceChecking.PlaywrightScraper;
 using PriceTracker.Features.PriceChecking.WebsiteScrapers;
+using PriceTracker.Features.PriceMonitoring;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -54,6 +55,7 @@ builder.Services.AddScoped<IPriceScrapingStrategy, HtmlAgilityScraperService>();
 builder.Services.AddScoped<IPriceScrapingStrategy, PlaywrightScraperService>();
 builder.Services.AddScoped<PriceCheckingService>();
 builder.Services.AddScoped<TrackedProductCreationService>();
+builder.Services.AddHostedService<PriceMonitoringWorker>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
