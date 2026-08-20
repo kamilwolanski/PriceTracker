@@ -48,12 +48,16 @@ namespace PriceTracker.Features.PriceChecking
 
             var result = await CheckPriceInternal(trackedProduct.Url);
 
+            var checkedAt = await _trackedProductService.UpdateAfterPriceCheckAsync(id);
+
             if (result.Status == PriceCheckStatus.Success &&
                 result.Price != null)
             {
-                var checkedAt = await _priceHistoryService.AddPriceCheckAsync(
+                await _priceHistoryService.AddPriceCheckAsync(
                     trackedProduct.Id,
-                    result.Price.Value);
+                    result.Price.Value,
+                    checkedAt
+                    );
 
                 result.CheckedAt = checkedAt;
             }

@@ -11,6 +11,7 @@ namespace PriceTracker.Features.TrackedProductCreation
         private readonly PriceCheckingService _priceCheckingService;
         private readonly TrackedProductService _trackedProductService;
         private readonly PriceHistoryService _priceHistoryService;
+
         public TrackedProductCreationService(TrackedProductService trackedProductService, PriceCheckingService priceCheckingService, PriceHistoryService priceHistoryService)
         {
             _priceCheckingService = priceCheckingService;
@@ -26,10 +27,12 @@ namespace PriceTracker.Features.TrackedProductCreation
                 var price = checkedPrice.Price.Value;
 
                 var newProduct = await _trackedProductService.AddAsync(dto, userId);
-
-                var checkedAt = await _priceHistoryService.AddPriceCheckAsync(
+                var checkedAt = await _trackedProductService.UpdateAfterPriceCheckAsync(newProduct.Id);
+                await _priceHistoryService.AddPriceCheckAsync(
                     newProduct.Id,
-                    price);
+                    price,
+                    checkedAt
+                    );
 
                 return new CreateTrackedProductResult
                 {

@@ -9,6 +9,7 @@ namespace PriceTracker.Features.TrackedProducts
 {
     public class TrackedProductService
     {
+        private static readonly TimeSpan CheckInterval = TimeSpan.FromSeconds(60);
         private readonly AppDbContext _context;
         public TrackedProductService(AppDbContext context)
         {
@@ -37,7 +38,10 @@ namespace PriceTracker.Features.TrackedProducts
             int skip,
             int take)
         {
+            var now = DateTime.UtcNow;
+
             return await _context.TrackedProducts
+                .Where(tp => tp.NextCheckAt == null || tp.NextCheckAt <= now)
                 .OrderBy(tp => tp.Id)
                 .Skip(skip)
                 .Take(take)
@@ -93,7 +97,7 @@ namespace PriceTracker.Features.TrackedProducts
                 Id = Guid.NewGuid(),
                 Name = dto.Name,
                 Url = dto.Url,
-                UserId = userId
+                UserId = userId,
             };
 
             _context.TrackedProducts.Add(trackedProduct);
@@ -134,6 +138,24 @@ namespace PriceTracker.Features.TrackedProducts
             _context.TrackedProducts.Remove(trackedProduct);
             await _context.SaveChangesAsync();
             return true;
+        }
+
+        public async Task<DateTime> UpdateAfterPriceCheckAsync(Guid id)
+        {
+            var trackedProduct = await _context.TrackedProducts
+                .FirstOrDefaultAsync(tp => tp.Id == id);
+
+            if (trackedProduct == null)
+                throw new InvalidOperationException("Tracked product not found.");
+
+            var checkedAt = DateTime.UtcNow;
+
+            trackedProduct.LastCheckedAt = checkedAt;
+            trackedProduct.NextCheckAt = checkedAt.Add(CheckInterval);
+
+            await _context.SaveChangesAsync();
+
+            return checkedAt;
         }
     }
 }

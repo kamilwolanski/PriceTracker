@@ -76,19 +76,12 @@ namespace PriceTracker.Features.PriceHistory
             };
         }
 
-        public async Task<DateTime> AddPriceCheckAsync(
+        public async Task AddPriceCheckAsync(
             Guid trackedProductId,
-            Money price)
+            Money price,
+            DateTime checkedAt
+            )
         {
-            var trackedProduct = await _context.TrackedProducts
-                .FirstOrDefaultAsync(tp => tp.Id == trackedProductId);
-
-            if (trackedProduct == null)
-                throw new InvalidOperationException("Tracked product not found.");
-
-            var checkedAt = DateTime.UtcNow;
-
-            trackedProduct.LastCheckedAt = checkedAt;
 
             var lastPrice = await _context.PriceHistories
                 .Where(ph => ph.TrackedProductId == trackedProductId)
@@ -102,8 +95,6 @@ namespace PriceTracker.Features.PriceHistory
             }
 
             await _context.SaveChangesAsync();
-
-            return checkedAt;
         }
 
         public async Task<PriceHistoryDto?> UpdateAsync(Guid id, UpdatePriceHistoryDto dto, Guid userId)

@@ -53,12 +53,16 @@ namespace PriceTracker.Features.PriceMonitoring
                                 await priceCheckingService
                                     .CheckPriceAsync(product.Url);
 
+                            var checkedAt = await trackedProductService.UpdateAfterPriceCheckAsync(product.Id);
+
                             if (checkedPrice.Status == PriceCheckStatus.Success &&
                                 checkedPrice.Price != null)
                             {
                                 await priceHistoryService.AddPriceCheckAsync(
                                     product.Id,
-                                    checkedPrice.Price.Value);
+                                    checkedPrice.Price.Value,
+                                    checkedAt
+                                    );
                             }
                         }
 
@@ -69,7 +73,7 @@ namespace PriceTracker.Features.PriceMonitoring
                 Console.WriteLine("Price check finished.");
 
                 await Task.Delay(
-                    TimeSpan.FromSeconds(30),
+                    TimeSpan.FromSeconds(10),
                     stoppingToken);
             }
         }
