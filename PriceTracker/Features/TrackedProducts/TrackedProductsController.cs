@@ -107,6 +107,11 @@ namespace PriceTracker.Features.TrackedProducts
                     result);
             }
 
+            if (result.Status == PriceCheckStatus.InvalidUrl)
+            {
+                return BadRequest(result);
+            }
+
             return StatusCode(StatusCodes.Status500InternalServerError);
         }
 

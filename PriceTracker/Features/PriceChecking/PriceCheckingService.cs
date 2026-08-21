@@ -22,10 +22,13 @@ namespace PriceTracker.Features.PriceChecking
 
         private async Task<PriceCheckResult> CheckPriceInternal(string url)
         {
+            if (!ProductUrlValidator.IsValid(url, out var uri))
+                return PriceCheckResult.InvalidUrl();
+
             Money? scrapedPrice;
             try
             {
-                scrapedPrice = await _scraper.ScrapePriceAsync(url);
+                scrapedPrice = await _scraper.ScrapePriceAsync(uri);
             }
             catch
             {

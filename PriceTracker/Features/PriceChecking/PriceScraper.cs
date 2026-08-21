@@ -13,10 +13,8 @@ namespace PriceTracker.Features.PriceChecking
             _strategies = strategies;
         }
 
-        public async Task<Money?> ScrapePriceAsync(string url, CancellationToken cancellationToken = default)
+        public async Task<Money?> ScrapePriceAsync(Uri uri, CancellationToken cancellationToken = default)
         {
-            if (!Uri.TryCreate(url, UriKind.Absolute, out var uri))
-                return null;
 
             foreach (var strategy in _strategies.OrderBy(strategy => strategy.Priority))
             {

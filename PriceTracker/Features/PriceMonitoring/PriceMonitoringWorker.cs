@@ -19,6 +19,8 @@ namespace PriceTracker.Features.PriceMonitoring
         {
             while (!stoppingToken.IsCancellationRequested)
             {
+                try
+                {
                 using (var scope = _scopeFactory.CreateScope())
                 {
                     var trackedProductService =
@@ -49,25 +51,38 @@ namespace PriceTracker.Features.PriceMonitoring
 
                         foreach (var product in products)
                         {
-                            var checkedPrice =
-                                await priceCheckingService
-                                    .CheckPriceAsync(product.Url);
-
-                            var checkedAt = await trackedProductService.UpdateAfterPriceCheckAsync(product.Id);
-
-                            if (checkedPrice.Status == PriceCheckStatus.Success &&
-                                checkedPrice.Price != null)
+                            try
                             {
-                                await priceHistoryService.AddPriceCheckAsync(
-                                    product.Id,
-                                    checkedPrice.Price.Value,
-                                    checkedAt
-                                    );
+                                var checkedPrice =
+                                    await priceCheckingService.CheckPriceAsync(product.Url);
+
+                                var checkedAt =
+                                    await trackedProductService.UpdateAfterPriceCheckAsync(product.Id);
+
+                                if (checkedPrice.Status == PriceCheckStatus.Success &&
+                                    checkedPrice.Price != null)
+                                {
+                                    await priceHistoryService.AddPriceCheckAsync(
+                                        product.Id,
+                                        checkedPrice.Price.Value,
+                                        checkedAt);
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                Console.WriteLine(
+                                    $"Failed to check product {product.Id}: {ex.Message}");
                             }
                         }
 
                         skip += batchSize;
                     }
+                }
+
+                } catch (Exception ex)
+                {
+                    Console.WriteLine(
+                        $"Price monitoring worker failed: {ex.Message}");
                 }
 
                 Console.WriteLine("Price check finished.");

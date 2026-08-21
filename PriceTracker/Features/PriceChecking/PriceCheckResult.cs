@@ -7,7 +7,8 @@ namespace PriceTracker.Features.PriceChecking
     {
         Success,
         ProductNotFound,
-        ScrapeFailed
+        ScrapeFailed,
+        InvalidUrl
     }
     public class PriceCheckResult
     {
@@ -35,6 +36,12 @@ namespace PriceTracker.Features.PriceChecking
             {
                 Status = PriceCheckStatus.ScrapeFailed,
                 Error = "Could not scrape price."
+            };
+        public static PriceCheckResult InvalidUrl() =>
+            new PriceCheckResult
+            {
+                Status = PriceCheckStatus.InvalidUrl,
+                Error = "Invalid url."
             };
     }
 }
