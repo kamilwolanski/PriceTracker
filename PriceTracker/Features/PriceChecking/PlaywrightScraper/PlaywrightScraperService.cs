@@ -32,25 +32,8 @@ namespace PriceTracker.Features.PriceChecking.PlaywrightScraper
             });
 
             var html = await page.ContentAsync();
-            await WriteDebugFilesAsync(uri, html, cancellationToken);
 
             return HtmlAgilityScraperService.TryExtractPriceFromHtml(html);
         }
-
-        private static async Task WriteDebugFilesAsync(Uri uri, string html, CancellationToken cancellationToken)
-        {
-            var debugDirectory = Path.Combine(@"C:\tmp", "PriceTracker");
-            Console.WriteLine($"Saving debug to: {debugDirectory}");
-            Directory.CreateDirectory(debugDirectory);
-            await File.WriteAllTextAsync(
-                Path.Combine(debugDirectory, "playwright-debug.html"),
-                html,
-                cancellationToken);
-            await File.WriteAllTextAsync(
-                Path.Combine(debugDirectory, "playwright-debug-status.txt"),
-                $"Strategy: Playwright{Environment.NewLine}Url: {uri}",
-                cancellationToken);
-        }
     }
 }
-

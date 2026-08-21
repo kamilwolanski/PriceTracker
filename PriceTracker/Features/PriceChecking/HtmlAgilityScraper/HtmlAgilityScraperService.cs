@@ -3,7 +3,6 @@ using PriceTracker.Features.PriceHistory.ValueObjects;
 
 using System.Globalization;
 using System.Text.Json;
-using System.Text.RegularExpressions;
 
 namespace PriceTracker.Features.PriceChecking.HtmlAgilityScraper
 {
@@ -21,7 +20,6 @@ namespace PriceTracker.Features.PriceChecking.HtmlAgilityScraper
 
             using var response = await client.SendAsync(request, cancellationToken);
             var html = await response.Content.ReadAsStringAsync(cancellationToken);
-            await WriteDebugFilesAsync(uri, response, html, cancellationToken);
 
             if (!response.IsSuccessStatusCode)
                 return null;
@@ -71,25 +69,6 @@ namespace PriceTracker.Features.PriceChecking.HtmlAgilityScraper
             request.Headers.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36");
             request.Headers.Accept.ParseAdd("text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
             request.Headers.AcceptLanguage.ParseAdd("pl-PL,pl;q=0.9,en-US;q=0.8,en;q=0.7");
-        }
-
-        private static async Task WriteDebugFilesAsync(
-            Uri uri,
-            HttpResponseMessage response,
-            string html,
-            CancellationToken cancellationToken)
-        {
-            var debugDirectory = Path.Combine(@"C:\tmp", "PriceTracker");
-            Console.WriteLine($"Saving debug to: {debugDirectory}");
-            Directory.CreateDirectory(debugDirectory);
-            await File.WriteAllTextAsync(
-                Path.Combine(debugDirectory, "scraper-debug.html"),
-                html,
-                cancellationToken);
-            await File.WriteAllTextAsync(
-                Path.Combine(debugDirectory, "scraper-debug-status.txt"),
-                $"Strategy: HtmlAgility{Environment.NewLine}StatusCode: {(int)response.StatusCode} {response.StatusCode}{Environment.NewLine}Url: {uri}{Environment.NewLine}FinalUrl: {response.RequestMessage?.RequestUri}",
-                cancellationToken);
         }
 
         private static string? GetAttributeValueOrNull(HtmlNode? node, string attributeName)
