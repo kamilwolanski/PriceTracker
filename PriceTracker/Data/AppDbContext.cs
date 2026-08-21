@@ -17,6 +17,10 @@ namespace PriceTracker.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.Entity<User>()
+                .HasIndex(u => u.Email)
+                .IsUnique();
+
             modelBuilder.Entity<PriceHistory>()
                 .ComplexProperty(p => p.Price, price =>
                 {

@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Npgsql;
 using PriceTracker.Data;
 using PriceTracker.Features.Auth.DTOs;
 using PriceTracker.Models;
@@ -43,7 +44,15 @@ namespace PriceTracker.Features.Auth
                 UserId = user.Id,
                 ExpiresAt = DateTime.UtcNow.AddDays(7),
             });
-            await _context.SaveChangesAsync();
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException ex) when (IsUniqueEmailViolation(ex))
+            {
+                return AuthResult.Fail("Email is already taken.");
+            }
 
             return AuthResult.Ok(GenerateToken(user), refreshToken);
         }
@@ -132,6 +141,13 @@ namespace PriceTracker.Features.Auth
                 rng.GetBytes(randomBytes);
             }
             return Convert.ToBase64String(randomBytes);
+        }
+
+        private static bool IsUniqueEmailViolation(DbUpdateException exception)
+        {
+            return exception.InnerException is PostgresException postgresException &&
+                postgresException.SqlState == PostgresErrorCodes.UniqueViolation &&
+                postgresException.ConstraintName == "IX_Users_Email";
         }
     }
 }
