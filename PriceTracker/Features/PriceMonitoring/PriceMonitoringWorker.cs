@@ -7,11 +7,14 @@ namespace PriceTracker.Features.PriceMonitoring
     public class PriceMonitoringWorker : BackgroundService
     {
         private readonly IServiceScopeFactory _scopeFactory;
+        private readonly ILogger<PriceMonitoringWorker> _logger;
 
         public PriceMonitoringWorker(
-            IServiceScopeFactory scopeFactory)
+            IServiceScopeFactory scopeFactory,
+            ILogger<PriceMonitoringWorker> logger)
         {
             _scopeFactory = scopeFactory;
+            _logger = logger;
         }
 
         protected override async Task ExecuteAsync(
@@ -21,71 +24,72 @@ namespace PriceTracker.Features.PriceMonitoring
             {
                 try
                 {
-                using (var scope = _scopeFactory.CreateScope())
-                {
-                    var trackedProductService =
-                        scope.ServiceProvider
-                            .GetRequiredService<TrackedProductService>();
-
-                    var priceCheckingService =
-                        scope.ServiceProvider
-                            .GetRequiredService<PriceCheckingService>();
-
-                    var priceHistoryService =
-                        scope.ServiceProvider
-                            .GetRequiredService<PriceHistoryService>();
-
-                    var skip = 0;
-                    const int batchSize = 100;
-
-                    while (true)
+                    using (var scope = _scopeFactory.CreateScope())
                     {
-                        var products =
-                            await trackedProductService
-                                .GetProductsForPriceCheckAsync(
-                                    skip,
-                                    batchSize);
+                        var trackedProductService =
+                            scope.ServiceProvider
+                                .GetRequiredService<TrackedProductService>();
 
-                        if (products.Count == 0)
-                            break;
+                        var priceCheckingService =
+                            scope.ServiceProvider
+                                .GetRequiredService<PriceCheckingService>();
 
-                        foreach (var product in products)
+                        var priceHistoryService =
+                            scope.ServiceProvider
+                                .GetRequiredService<PriceHistoryService>();
+
+                        var skip = 0;
+                        const int batchSize = 100;
+
+                        while (true)
                         {
-                            try
+                            var products =
+                                await trackedProductService
+                                    .GetProductsForPriceCheckAsync(
+                                        skip,
+                                        batchSize);
+
+                            if (products.Count == 0)
+                                break;
+
+                            foreach (var product in products)
                             {
-                                var checkedPrice =
-                                    await priceCheckingService.CheckPriceAsync(product.Url);
-
-                                var checkedAt =
-                                    await trackedProductService.UpdateAfterPriceCheckAsync(product.Id);
-
-                                if (checkedPrice.Status == PriceCheckStatus.Success &&
-                                    checkedPrice.Price != null)
+                                try
                                 {
-                                    await priceHistoryService.AddPriceCheckAsync(
-                                        product.Id,
-                                        checkedPrice.Price.Value,
-                                        checkedAt);
+                                    var checkedPrice =
+                                        await priceCheckingService.CheckPriceAsync(product.Url);
+
+                                    var checkedAt =
+                                        await trackedProductService.UpdateAfterPriceCheckAsync(product.Id);
+
+                                    if (checkedPrice.Status == PriceCheckStatus.Success &&
+                                        checkedPrice.Price != null)
+                                    {
+                                        await priceHistoryService.AddPriceCheckAsync(
+                                            product.Id,
+                                            checkedPrice.Price.Value,
+                                            checkedAt);
+                                    }
+                                }
+                                catch (Exception ex)
+                                {
+                                    _logger.LogError(
+                                        ex,
+                                        "Failed to check price for tracked product {TrackedProductId}",
+                                        product.Id);
                                 }
                             }
-                            catch (Exception ex)
-                            {
-                                Console.WriteLine(
-                                    $"Failed to check product {product.Id}: {ex.Message}");
-                            }
-                        }
 
-                        skip += batchSize;
+                            skip += batchSize;
+                        }
                     }
                 }
-
-                } catch (Exception ex)
+                catch (Exception ex)
                 {
-                    Console.WriteLine(
-                        $"Price monitoring worker failed: {ex.Message}");
+                    _logger.LogError(ex, "Price monitoring worker failed");
                 }
 
-                Console.WriteLine("Price check finished.");
+                _logger.LogInformation("Price check finished");
 
                 await Task.Delay(
                     TimeSpan.FromSeconds(10),

@@ -9,34 +9,44 @@ namespace PriceTracker.Features.PriceChecking
         private readonly IPriceScraper _scraper;
         private readonly TrackedProductService _trackedProductService;
         private readonly PriceHistoryService _priceHistoryService;
+        private readonly ILogger<PriceCheckingService> _logger;
 
         public PriceCheckingService(
             IPriceScraper scraper,
             TrackedProductService trackedProductService,
-            PriceHistoryService priceHistoryService)
+            PriceHistoryService priceHistoryService,
+            ILogger<PriceCheckingService> logger)
         {
             _scraper = scraper;
             _trackedProductService = trackedProductService;
             _priceHistoryService = priceHistoryService;
+            _logger = logger;
         }
 
         private async Task<PriceCheckResult> CheckPriceInternal(string url)
         {
             if (!ProductUrlValidator.IsValid(url, out var uri))
+            {
+                _logger.LogWarning("Price check skipped because product URL is invalid: {Url}", url);
                 return PriceCheckResult.InvalidUrl();
+            }
 
             Money? scrapedPrice;
             try
             {
                 scrapedPrice = await _scraper.ScrapePriceAsync(uri);
             }
-            catch
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Price scraping failed for {Url}", uri);
                 return PriceCheckResult.ScrapeFailed();
             }
 
             if (scrapedPrice == null)
+            {
+                _logger.LogWarning("Price scraping returned no price for {Url}", uri);
                 return PriceCheckResult.ScrapeFailed();
+            }
 
             return PriceCheckResult.Ok(scrapedPrice.Value);
         }
@@ -74,4 +84,3 @@ namespace PriceTracker.Features.PriceChecking
         }
     }
 }
-
