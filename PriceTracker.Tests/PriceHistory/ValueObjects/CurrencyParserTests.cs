@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using PriceTracker.Features.PriceHistory.ValueObjects;
 
-namespace PriceTracker.Tests
+namespace PriceTracker.Tests.PriceHistory.ValueObjects
 {
     public class CurrencyParserTests
     {

@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace PriceTracker.Tests
+namespace PriceTracker.Tests.PriceHistory.ValueObjects
 {
     public class MoneyTests
     {
