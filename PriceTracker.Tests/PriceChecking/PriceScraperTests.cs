@@ -1,7 +1,8 @@
-﻿using Microsoft.Extensions.Logging.Abstractions;
+﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
+using Moq;
 using PriceTracker.Features.PriceChecking;
 using PriceTracker.Features.PriceHistory.ValueObjects;
-using PriceTracker.Tests.PriceChecking.Mocks;
 
 namespace PriceTracker.Tests.PriceChecking
 {
@@ -10,15 +11,30 @@ namespace PriceTracker.Tests.PriceChecking
         [Fact]
         public async Task ScrapePriceAsync_WithMatchingStrategy_ReturnsPrice()
         {
-            IEnumerable<IPriceScrapingStrategy> scrapingStrategies = new List<IPriceScrapingStrategy>
+            var strategy = new Mock<IPriceScrapingStrategy>();
+
+            strategy.Setup(x => x.Priority)
+                .Returns(1);
+
+            strategy.Setup(x => x.CanHandle(It.IsAny<Uri>()))
+                .Returns(true);
+
+            strategy.Setup(x => x.ScrapePriceAsync(
+                    It.IsAny<Uri>(),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new Money(20, "PLN"));
+
+            var scrapingStrategies = new List<IPriceScrapingStrategy>
             {
-                new MockPriceScrapingStrategy(),
+                strategy.Object
             };
 
-            var scraper = new PriceScraper(scrapingStrategies, NullLogger<PriceScraper>.Instance);
+            var scraper = new PriceScraper(
+                scrapingStrategies,
+                NullLogger<PriceScraper>.Instance);
 
-            var url = "https://example.com";
-            var result = await scraper.ScrapePriceAsync(new Uri(url));
+            var result = await scraper.ScrapePriceAsync(
+                new Uri("https://example.com"));
 
             Assert.NotNull(result);
             Assert.Equal(20m, result.Value.Amount);
@@ -27,40 +43,62 @@ namespace PriceTracker.Tests.PriceChecking
         [Fact]
         public async Task ScrapePriceAsync_WithNoMatchingStrategy_ReturnsNull()
         {
-            var strategy = new MockPriceScrapingStrategy
+            var strategy = new Mock<IPriceScrapingStrategy>();
+
+            strategy.Setup(x => x.Priority)
+                .Returns(1);
+
+            strategy.Setup(x => x.CanHandle(It.IsAny<Uri>()))
+                .Returns(false);
+
+            var scrapingStrategies = new List<IPriceScrapingStrategy>
             {
-                Handle = false
-            };
-            IEnumerable<IPriceScrapingStrategy> scrapingStrategies = new List<IPriceScrapingStrategy>
-            {
-                strategy,
+                strategy.Object
             };
 
-            var scraper = new PriceScraper(scrapingStrategies, NullLogger<PriceScraper>.Instance);
+            var scraper = new PriceScraper(
+                scrapingStrategies,
+                NullLogger<PriceScraper>.Instance);
 
-            var url = "https://example.com";
-            var result = await scraper.ScrapePriceAsync(new Uri(url));
+            var result = await scraper.ScrapePriceAsync(
+                new Uri("https://example.com"));
 
             Assert.Null(result);
+
+            strategy.Verify(
+                x => x.ScrapePriceAsync(
+                    It.IsAny<Uri>(),
+                    It.IsAny<CancellationToken>()),
+                Times.Never);
         }
 
         [Fact]
         public async Task ScrapePriceAsync_WithMatchingStrategyReturningNull_ReturnsNull()
         {
-            var strategy = new MockPriceScrapingStrategy
+            var strategy = new Mock<IPriceScrapingStrategy>();
+
+            strategy.Setup(x => x.Priority)
+                .Returns(1);
+
+            strategy.Setup(x => x.CanHandle(It.IsAny<Uri>()))
+                .Returns(true);
+
+            strategy.Setup(x => x.ScrapePriceAsync(
+                    It.IsAny<Uri>(),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync((Money?)null);
+
+            var scrapingStrategies = new List<IPriceScrapingStrategy>
             {
-                Handle = true,
-                Price = null
-            };
-            IEnumerable<IPriceScrapingStrategy> scrapingStrategies = new List<IPriceScrapingStrategy>
-            {
-                strategy,
+                strategy.Object
             };
 
-            var scraper = new PriceScraper(scrapingStrategies, NullLogger<PriceScraper>.Instance);
+            var scraper = new PriceScraper(
+                scrapingStrategies,
+                NullLogger<PriceScraper>.Instance);
 
-            var url = "https://example.com";
-            var result = await scraper.ScrapePriceAsync(new Uri(url));
+            var result = await scraper.ScrapePriceAsync(
+                new Uri("https://example.com"));
 
             Assert.Null(result);
         }
@@ -68,65 +106,121 @@ namespace PriceTracker.Tests.PriceChecking
         [Fact]
         public async Task ScrapePriceAsync_WithMultipleStrategies_UsesStrategyWithLowestPriorityValueFirst()
         {
-            var strategyWithHighPriority = new MockPriceScrapingStrategy
+            var strategyWithHighPriority = new Mock<IPriceScrapingStrategy>();
+
+            strategyWithHighPriority.Setup(x => x.Priority)
+                .Returns(1);
+
+            strategyWithHighPriority.Setup(x => x.CanHandle(It.IsAny<Uri>()))
+                .Returns(true);
+
+            strategyWithHighPriority.Setup(x => x.ScrapePriceAsync(
+                    It.IsAny<Uri>(),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new Money(100, "PLN"));
+
+
+            var strategyWithLowerPriority = new Mock<IPriceScrapingStrategy>();
+
+            strategyWithLowerPriority.Setup(x => x.Priority)
+                .Returns(2);
+
+            strategyWithLowerPriority.Setup(x => x.CanHandle(It.IsAny<Uri>()))
+                .Returns(true);
+
+            strategyWithLowerPriority.Setup(x => x.ScrapePriceAsync(
+                    It.IsAny<Uri>(),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new Money(200, "PLN"));
+
+
+            var scrapingStrategies = new List<IPriceScrapingStrategy>
             {
-                Priority = 1,
-                Handle = true,
-                Price = new Money(100, "PLN")
+                strategyWithLowerPriority.Object,
+                strategyWithHighPriority.Object
             };
 
-            var strategyWithLowerPriority = new MockPriceScrapingStrategy
-            {
-                Priority = 2,
-                Handle = true,
-                Price = new Money(200, "PLN")
-            };
+            var scraper = new PriceScraper(
+                scrapingStrategies,
+                NullLogger<PriceScraper>.Instance);
 
-            IEnumerable<IPriceScrapingStrategy> scrapingStrategies = new List<IPriceScrapingStrategy>
-            {
-                strategyWithHighPriority,
-                strategyWithLowerPriority
-            };
-
-            var scraper = new PriceScraper(scrapingStrategies, NullLogger<PriceScraper>.Instance);
-
-            var url = "https://example.com";
-            var result = await scraper.ScrapePriceAsync(new Uri(url));
+            var result = await scraper.ScrapePriceAsync(
+                new Uri("https://example.com"));
 
             Assert.NotNull(result);
             Assert.Equal(100m, result.Value.Amount);
+
+            strategyWithHighPriority.Verify(
+                x => x.ScrapePriceAsync(
+                    It.IsAny<Uri>(),
+                    It.IsAny<CancellationToken>()),
+                Times.Once);
+
+            strategyWithLowerPriority.Verify(
+                x => x.ScrapePriceAsync(
+                    It.IsAny<Uri>(),
+                    It.IsAny<CancellationToken>()),
+                Times.Never);
         }
 
         [Fact]
         public async Task ScrapePriceAsync_WithFirstStrategyReturningNull_UsesNextStrategy()
         {
-            var strategyWithHighPriority = new MockPriceScrapingStrategy
+            var strategyWithHighPriority = new Mock<IPriceScrapingStrategy>();
+
+            strategyWithHighPriority.Setup(x => x.Priority)
+                .Returns(1);
+
+            strategyWithHighPriority.Setup(x => x.CanHandle(It.IsAny<Uri>()))
+                .Returns(true);
+
+            strategyWithHighPriority.Setup(x => x.ScrapePriceAsync(
+                    It.IsAny<Uri>(),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync((Money?)null);
+
+
+            var strategyWithLowerPriority = new Mock<IPriceScrapingStrategy>();
+
+            strategyWithLowerPriority.Setup(x => x.Priority)
+                .Returns(2);
+
+            strategyWithLowerPriority.Setup(x => x.CanHandle(It.IsAny<Uri>()))
+                .Returns(true);
+
+            strategyWithLowerPriority.Setup(x => x.ScrapePriceAsync(
+                    It.IsAny<Uri>(),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new Money(200, "PLN"));
+
+
+            var scrapingStrategies = new List<IPriceScrapingStrategy>
             {
-                Priority = 1,
-                Handle = true,
-                Price = null
+                strategyWithHighPriority.Object,
+                strategyWithLowerPriority.Object
             };
 
-            var strategyWithLowerPriority = new MockPriceScrapingStrategy
-            {
-                Priority = 2,
-                Handle = true,
-                Price = new Money(200, "PLN")
-            };
+            var scraper = new PriceScraper(
+                scrapingStrategies,
+                NullLogger<PriceScraper>.Instance);
 
-            IEnumerable<IPriceScrapingStrategy> scrapingStrategies = new List<IPriceScrapingStrategy>
-            {
-                strategyWithHighPriority,
-                strategyWithLowerPriority
-            };
-
-            var scraper = new PriceScraper(scrapingStrategies, NullLogger<PriceScraper>.Instance);
-
-            var url = "https://example.com";
-            var result = await scraper.ScrapePriceAsync(new Uri(url));
+            var result = await scraper.ScrapePriceAsync(
+                new Uri("https://example.com"));
 
             Assert.NotNull(result);
             Assert.Equal(200m, result.Value.Amount);
+
+            strategyWithHighPriority.Verify(
+                x => x.ScrapePriceAsync(
+                    It.IsAny<Uri>(),
+                    It.IsAny<CancellationToken>()),
+                Times.Once);
+
+            strategyWithLowerPriority.Verify(
+                x => x.ScrapePriceAsync(
+                    It.IsAny<Uri>(),
+                    It.IsAny<CancellationToken>()),
+                Times.Once);
         }
     }
 }
