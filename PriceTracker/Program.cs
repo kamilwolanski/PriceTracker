@@ -45,8 +45,8 @@ builder.Services.AddOpenApi(options =>
         return Task.CompletedTask;
     });
 });
-builder.Services.AddScoped<TrackedProductService>();
-builder.Services.AddScoped<PriceHistoryService>();
+builder.Services.AddScoped<ITrackedProductService, TrackedProductService>();
+builder.Services.AddScoped<IPriceHistoryService, PriceHistoryService>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<IPriceScraper, PriceScraper>();
 builder.Services.AddScoped<IPriceScrapingStrategy, XkomPriceScraper>();

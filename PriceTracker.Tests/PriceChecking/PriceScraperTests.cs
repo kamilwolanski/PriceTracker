@@ -222,5 +222,47 @@ namespace PriceTracker.Tests.PriceChecking
                     It.IsAny<CancellationToken>()),
                 Times.Once);
         }
+
+        [Fact]
+        public async Task ScrapePriceAsync_WithFirstStrategyReturningPrice_DoesNotCallNextStrategy()
+        {
+            var firstStrategy = new Mock<IPriceScrapingStrategy>();
+            firstStrategy.Setup(x => x.Priority).Returns(1);
+            firstStrategy.Setup(x => x.CanHandle(It.IsAny<Uri>())).Returns(true);
+            firstStrategy.Setup(x => x.ScrapePriceAsync(
+                It.IsAny<Uri>(), 
+                It.IsAny<CancellationToken>())).ReturnsAsync(new Money(200m, "PLN"));
+            var secondStrategy = new Mock<IPriceScrapingStrategy>();
+            secondStrategy.Setup(x => x.Priority).Returns(2);
+            secondStrategy.Setup(x => x.CanHandle(It.IsAny<Uri>())).Returns(true);
+            secondStrategy.Setup(x => x.ScrapePriceAsync(
+                It.IsAny<Uri>(),
+                It.IsAny<CancellationToken>())).ReturnsAsync(new Money(200m, "PLN"));
+
+            var scrapingStrategies = new List<IPriceScrapingStrategy>
+            {
+                firstStrategy.Object,
+                secondStrategy.Object
+            };
+
+            var scraper = new PriceScraper(
+                scrapingStrategies,
+                NullLogger<PriceScraper>.Instance);
+            var result = await scraper.ScrapePriceAsync(
+    new Uri("https://example.com"));
+
+            firstStrategy.Verify(
+              x => x.ScrapePriceAsync(
+                It.IsAny<Uri>(),
+                It.IsAny<CancellationToken>()),
+                Times.Once
+                );
+
+            secondStrategy.Verify(
+             x => x.ScrapePriceAsync(
+                 It.IsAny<Uri>(),
+                 It.IsAny<CancellationToken>()),
+             Times.Never);
+        }
     }
 }

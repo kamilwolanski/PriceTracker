@@ -7,14 +7,14 @@ namespace PriceTracker.Features.PriceChecking
     public class PriceCheckingService
     {
         private readonly IPriceScraper _scraper;
-        private readonly TrackedProductService _trackedProductService;
-        private readonly PriceHistoryService _priceHistoryService;
+        private readonly ITrackedProductService _trackedProductService;
+        private readonly IPriceHistoryService _priceHistoryService;
         private readonly ILogger<PriceCheckingService> _logger;
 
         public PriceCheckingService(
             IPriceScraper scraper,
-            TrackedProductService trackedProductService,
-            PriceHistoryService priceHistoryService,
+            ITrackedProductService trackedProductService,
+            IPriceHistoryService priceHistoryService,
             ILogger<PriceCheckingService> logger)
         {
             _scraper = scraper;

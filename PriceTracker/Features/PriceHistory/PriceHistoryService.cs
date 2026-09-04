@@ -6,7 +6,7 @@ using PriceTracker.Models;
 
 namespace PriceTracker.Features.PriceHistory
 {
-    public class PriceHistoryService
+    public class PriceHistoryService : IPriceHistoryService
     {
         private readonly AppDbContext _context;
         public PriceHistoryService(AppDbContext context)

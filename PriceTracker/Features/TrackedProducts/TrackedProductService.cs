@@ -7,7 +7,7 @@ using PriceTracker.Models;
 
 namespace PriceTracker.Features.TrackedProducts
 {
-    public class TrackedProductService
+    public class TrackedProductService : ITrackedProductService
     {
         private static readonly TimeSpan CheckInterval = TimeSpan.FromSeconds(60);
         private readonly AppDbContext _context;
