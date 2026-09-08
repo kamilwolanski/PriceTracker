@@ -28,6 +28,21 @@ namespace PriceTracker.Features.PriceHistory
                 .FirstOrDefaultAsync();
         }
 
+        public async Task<PriceHistoryDto?> GetTheLastPriceAsync(Guid productId)
+        {
+            return await _context.PriceHistories
+                .Where(x => x.TrackedProductId == productId)
+                .OrderByDescending(x => x.CheckedAt)
+                .Select(ph => new PriceHistoryDto
+                {
+                    Id = ph.Id,
+                    Price = ph.Price,
+                    CheckedAt = ph.CheckedAt,
+                    TrackedProductId = ph.TrackedProductId
+                })
+                .FirstOrDefaultAsync();
+        }
+
         public async Task<PriceHistoryDto?> AddAsync(
             AddPriceHistoryDto dto,
             Guid userId)

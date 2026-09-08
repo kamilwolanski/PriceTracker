@@ -1,4 +1,5 @@
-﻿using PriceTracker.Features.PriceChecking;
+﻿using PriceTracker.Features.NotificationService;
+using PriceTracker.Features.PriceChecking;
 using PriceTracker.Features.PriceHistory;
 using PriceTracker.Features.TrackedProducts;
 
@@ -8,13 +9,20 @@ namespace PriceTracker.Features.PriceMonitoring
     {
         private readonly IServiceScopeFactory _scopeFactory;
         private readonly ILogger<PriceMonitoringWorker> _logger;
+        private readonly PriceChangeDetector _priceChangeDetector;
+        private readonly INotificationService _notificationService;
 
         public PriceMonitoringWorker(
             IServiceScopeFactory scopeFactory,
-            ILogger<PriceMonitoringWorker> logger)
+            ILogger<PriceMonitoringWorker> logger,
+            PriceChangeDetector priceChangeDetector,
+            INotificationService notificationService
+            )
         {
             _scopeFactory = scopeFactory;
             _logger = logger;
+            _priceChangeDetector = priceChangeDetector;
+            _notificationService = notificationService;
         }
 
         protected override async Task ExecuteAsync(
@@ -38,7 +46,6 @@ namespace PriceTracker.Features.PriceMonitoring
                             scope.ServiceProvider
                                 .GetRequiredService<PriceHistoryService>();
 
-                        var skip = 0;
                         const int batchSize = 100;
 
                         while (true)
@@ -46,7 +53,7 @@ namespace PriceTracker.Features.PriceMonitoring
                             var products =
                                 await trackedProductService
                                     .GetProductsForPriceCheckAsync(
-                                        skip,
+                                        0,
                                         batchSize);
 
                             if (products.Count == 0)
@@ -65,10 +72,22 @@ namespace PriceTracker.Features.PriceMonitoring
                                     if (checkedPrice.Status == PriceCheckStatus.Success &&
                                         checkedPrice.Price != null)
                                     {
+                                        var lastPrice = await priceHistoryService.GetTheLastPriceAsync(product.Id);
+
                                         await priceHistoryService.AddPriceCheckAsync(
                                             product.Id,
                                             checkedPrice.Price.Value,
                                             checkedAt);
+
+                                        if(lastPrice != null)
+                                        {
+                                            var priceChange = _priceChangeDetector.Detect(lastPrice.Price.Amount, checkedPrice.Price.Value.Amount);
+
+                                            if(priceChange.Type == PriceChangeType.Decreased && priceChange.PercentageChange <= -10)
+                                            {
+                                               await _notificationService.NotifyPriceDropAsync(priceChange);
+                                            }
+                                        }
                                     }
                                 }
                                 catch (Exception ex)
@@ -80,7 +99,6 @@ namespace PriceTracker.Features.PriceMonitoring
                                 }
                             }
 
-                            skip += batchSize;
                         }
                     }
                 }
