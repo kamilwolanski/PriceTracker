@@ -40,7 +40,7 @@ namespace PriceTracker.Features.PriceMonitoring
 
                         var priceCheckingService =
                             scope.ServiceProvider
-                                .GetRequiredService<PriceCheckingService>();
+                                .GetRequiredService<IPriceCheckingService>();
 
                         var priceHistoryService =
                             scope.ServiceProvider

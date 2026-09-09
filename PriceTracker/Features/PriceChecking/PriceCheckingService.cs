@@ -4,18 +4,18 @@ using PriceTracker.Features.TrackedProducts;
 
 namespace PriceTracker.Features.PriceChecking
 {
-    public class PriceCheckingService
+    public class PriceCheckingService : IPriceCheckingService
     {
         private readonly IPriceScraper _scraper;
         private readonly ITrackedProductService _trackedProductService;
         private readonly IPriceHistoryService _priceHistoryService;
-        private readonly ILogger<PriceCheckingService> _logger;
+        private readonly ILogger<IPriceCheckingService> _logger;
 
         public PriceCheckingService(
             IPriceScraper scraper,
             ITrackedProductService trackedProductService,
             IPriceHistoryService priceHistoryService,
-            ILogger<PriceCheckingService> logger)
+            ILogger<IPriceCheckingService> logger)
         {
             _scraper = scraper;
             _trackedProductService = trackedProductService;

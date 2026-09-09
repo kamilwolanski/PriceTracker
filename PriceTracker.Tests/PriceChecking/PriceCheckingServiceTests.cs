@@ -28,7 +28,7 @@ namespace PriceTracker.Tests.PriceChecking
 
             var priceHistoryService = new Mock<IPriceHistoryService>();
 
-            var logger = new Mock<ILogger<PriceCheckingService>>();
+            var logger = new Mock<ILogger<IPriceCheckingService>>();
 
             var priceCheckingService = new PriceCheckingService(
                 scraper.Object,
@@ -54,7 +54,7 @@ namespace PriceTracker.Tests.PriceChecking
 
             var priceHistoryService = new Mock<IPriceHistoryService>();
 
-            var logger = new Mock<ILogger<PriceCheckingService>>();
+            var logger = new Mock<ILogger<IPriceCheckingService>>();
 
             var priceCheckingService = new PriceCheckingService(
                 scraper.Object,
@@ -84,7 +84,7 @@ namespace PriceTracker.Tests.PriceChecking
 
             var priceHistoryService = new Mock<IPriceHistoryService>();
 
-            var logger = new Mock<ILogger<PriceCheckingService>>();
+            var logger = new Mock<ILogger<IPriceCheckingService>>();
 
             var priceCheckingService = new PriceCheckingService(
                 scraper.Object,
@@ -111,7 +111,7 @@ namespace PriceTracker.Tests.PriceChecking
 
             var priceHistoryService = new Mock<IPriceHistoryService>();
 
-            var logger = new Mock<ILogger<PriceCheckingService>>();
+            var logger = new Mock<ILogger<IPriceCheckingService>>();
 
             var priceCheckingService = new PriceCheckingService(
                 scraper.Object,
@@ -138,7 +138,7 @@ namespace PriceTracker.Tests.PriceChecking
 
             var priceHistoryService = new Mock<IPriceHistoryService>();
 
-            var logger = new Mock<ILogger<PriceCheckingService>>();
+            var logger = new Mock<ILogger<IPriceCheckingService>>();
 
             var priceCheckingService = new PriceCheckingService(
                 scraper.Object,
@@ -181,7 +181,7 @@ namespace PriceTracker.Tests.PriceChecking
 
             var priceHistoryService = new Mock<IPriceHistoryService>();
 
-            var logger = new Mock<ILogger<PriceCheckingService>>();
+            var logger = new Mock<ILogger<IPriceCheckingService>>();
 
             var priceCheckingService = new PriceCheckingService(
                 scraper.Object,
@@ -228,7 +228,7 @@ namespace PriceTracker.Tests.PriceChecking
 
             var priceHistoryService = new Mock<IPriceHistoryService>();
 
-            var logger = new Mock<ILogger<PriceCheckingService>>();
+            var logger = new Mock<ILogger<IPriceCheckingService>>();
 
             var priceCheckingService = new PriceCheckingService(
                 scraper.Object,

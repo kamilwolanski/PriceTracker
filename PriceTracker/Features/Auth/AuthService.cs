@@ -11,7 +11,7 @@ using PriceTracker.Models;
 
 namespace PriceTracker.Features.Auth
 {
-    public class AuthService
+    public class AuthService : IAuthService
     {
         private readonly AppDbContext _context;
         private readonly IConfiguration _configuration;

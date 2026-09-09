@@ -48,15 +48,15 @@ builder.Services.AddOpenApi(options =>
 });
 builder.Services.AddScoped<ITrackedProductService, TrackedProductService>();
 builder.Services.AddScoped<IPriceHistoryService, PriceHistoryService>();
-builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IPriceScraper, PriceScraper>();
 builder.Services.AddScoped<IPriceScrapingStrategy, XkomPriceScraper>();
 builder.Services.AddScoped<IPriceScrapingStrategy, OlxPriceScraper>();
 builder.Services.AddScoped<IPriceScrapingStrategy, HtmlAgilityScraperService>();
 builder.Services.AddScoped<IPriceScrapingStrategy, PlaywrightScraperService>();
 builder.Services.AddSingleton<INotificationService, NotificationService>();
-builder.Services.AddScoped<PriceCheckingService>();
-builder.Services.AddScoped<TrackedProductCreationService>();
+builder.Services.AddScoped<IPriceCheckingService, PriceCheckingService>();
+builder.Services.AddScoped<ITrackedProductCreationService, TrackedProductCreationService>();
 builder.Services.AddHostedService<PriceMonitoringWorker>();
 builder.Services.AddSingleton<PriceChangeDetector>();
 
@@ -87,8 +87,6 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
-app.UseAuthorization();
 
 app.MapControllers();
 

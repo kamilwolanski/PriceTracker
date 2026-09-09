@@ -6,13 +6,13 @@ using PriceTracker.Models;
 
 namespace PriceTracker.Features.TrackedProductCreation
 {
-    public class TrackedProductCreationService
+    public class TrackedProductCreationService : ITrackedProductCreationService
     {
-        private readonly PriceCheckingService _priceCheckingService;
+        private readonly IPriceCheckingService _priceCheckingService;
         private readonly ITrackedProductService _trackedProductService;
         private readonly IPriceHistoryService _priceHistoryService;
 
-        public TrackedProductCreationService(ITrackedProductService trackedProductService, PriceCheckingService priceCheckingService, IPriceHistoryService priceHistoryService)
+        public TrackedProductCreationService(ITrackedProductService trackedProductService, IPriceCheckingService priceCheckingService, IPriceHistoryService priceHistoryService)
         {
             _priceCheckingService = priceCheckingService;
             _trackedProductService = trackedProductService;

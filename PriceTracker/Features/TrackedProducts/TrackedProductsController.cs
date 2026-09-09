@@ -12,13 +12,13 @@ namespace PriceTracker.Features.TrackedProducts
     [Authorize]
     public class TrackedProductsController : ControllerBase
     {
-        private readonly TrackedProductService _trackedProductService;
-        private readonly TrackedProductCreationService _trackedProductCreationService;
-        private readonly PriceCheckingService _priceCheckingService;
+        private readonly ITrackedProductService _trackedProductService;
+        private readonly ITrackedProductCreationService _trackedProductCreationService;
+        private readonly IPriceCheckingService _priceCheckingService;
         public TrackedProductsController(
-            TrackedProductService trackedProductService,
-            TrackedProductCreationService trackedProductCreationService,
-            PriceCheckingService priceCheckingService
+            ITrackedProductService trackedProductService,
+            ITrackedProductCreationService trackedProductCreationService,
+            IPriceCheckingService priceCheckingService
             )
         {
             _trackedProductService = trackedProductService;
