@@ -4,16 +4,19 @@ using PriceTracker.Features.PriceHistory.DTOs;
 using PriceTracker.Features.PriceHistory.ValueObjects;
 using PriceTracker.Features.TrackedProducts.DTOs;
 using PriceTracker.Models;
+using Microsoft.Extensions.Options;
+using PriceTracker.Features.PriceMonitoring;
 
 namespace PriceTracker.Features.TrackedProducts
 {
     public class TrackedProductService : ITrackedProductService
     {
-        private static readonly TimeSpan CheckInterval = TimeSpan.FromSeconds(60);
+        private readonly PriceMonitoringOptions _options;
         private readonly AppDbContext _context;
-        public TrackedProductService(AppDbContext context)
+        public TrackedProductService(AppDbContext context, IOptions<PriceMonitoringOptions> options)
         {
             _context = context;
+            _options = options.Value;
         }
 
         public async Task<List<TrackedProductDto>> GetAllTrackedProductsAsync(Guid userId)
@@ -148,7 +151,8 @@ namespace PriceTracker.Features.TrackedProducts
             var checkedAt = DateTime.UtcNow;
 
             trackedProduct.LastCheckedAt = checkedAt;
-            trackedProduct.NextCheckAt = checkedAt.Add(CheckInterval);
+            trackedProduct.NextCheckAt =
+                    checkedAt.AddSeconds(_options.CheckIntervalSeconds);
 
             await _context.SaveChangesAsync();
 

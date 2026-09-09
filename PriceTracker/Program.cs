@@ -46,6 +46,9 @@ builder.Services.AddOpenApi(options =>
         return Task.CompletedTask;
     });
 });
+builder.Services.Configure<PriceMonitoringOptions>(
+    builder.Configuration.GetSection("PriceMonitoring"));
+
 builder.Services.AddScoped<ITrackedProductService, TrackedProductService>();
 builder.Services.AddScoped<IPriceHistoryService, PriceHistoryService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
