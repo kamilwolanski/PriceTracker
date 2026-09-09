@@ -86,7 +86,7 @@ namespace PriceTracker.Features.TrackedProducts
         [HttpPost("{id}/check-price")]
         public async Task<IActionResult> CheckPrice(Guid id)
         {
-            var result = await _priceCheckingService.CheckPriceAsync(
+            var result = await _priceCheckingService.CheckTrackedProductPriceAsync(
                 id,
                 GetUserId());
 

@@ -2,7 +2,7 @@
 {
     public interface IPriceCheckingService
     {
-        Task<PriceCheckResult> CheckPriceAsync(Guid id, Guid userId);
+        Task<PriceCheckResult> CheckTrackedProductPriceAsync(Guid id, Guid userId);
         Task<PriceCheckResult> CheckPriceAsync(string url);
     }
 }

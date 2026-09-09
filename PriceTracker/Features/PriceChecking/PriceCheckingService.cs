@@ -9,13 +9,13 @@ namespace PriceTracker.Features.PriceChecking
         private readonly IPriceScraper _scraper;
         private readonly ITrackedProductService _trackedProductService;
         private readonly IPriceHistoryService _priceHistoryService;
-        private readonly ILogger<IPriceCheckingService> _logger;
+        private readonly ILogger<PriceCheckingService> _logger;
 
         public PriceCheckingService(
             IPriceScraper scraper,
             ITrackedProductService trackedProductService,
             IPriceHistoryService priceHistoryService,
-            ILogger<IPriceCheckingService> logger)
+            ILogger<PriceCheckingService> logger)
         {
             _scraper = scraper;
             _trackedProductService = trackedProductService;
@@ -51,7 +51,7 @@ namespace PriceTracker.Features.PriceChecking
             return PriceCheckResult.Ok(scrapedPrice.Value);
         }
 
-        public async Task<PriceCheckResult> CheckPriceAsync(Guid id, Guid userId)
+        public async Task<PriceCheckResult> CheckTrackedProductPriceAsync(Guid id, Guid userId)
         {
             var trackedProduct = await _trackedProductService
                 .GetByIdAsync(id, userId);

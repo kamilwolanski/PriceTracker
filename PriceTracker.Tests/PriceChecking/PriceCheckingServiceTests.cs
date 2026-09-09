@@ -28,7 +28,7 @@ namespace PriceTracker.Tests.PriceChecking
 
             var priceHistoryService = new Mock<IPriceHistoryService>();
 
-            var logger = new Mock<ILogger<IPriceCheckingService>>();
+            var logger = new Mock<ILogger<PriceCheckingService>>();
 
             var priceCheckingService = new PriceCheckingService(
                 scraper.Object,
@@ -54,7 +54,7 @@ namespace PriceTracker.Tests.PriceChecking
 
             var priceHistoryService = new Mock<IPriceHistoryService>();
 
-            var logger = new Mock<ILogger<IPriceCheckingService>>();
+            var logger = new Mock<ILogger<PriceCheckingService>>();
 
             var priceCheckingService = new PriceCheckingService(
                 scraper.Object,
@@ -84,7 +84,7 @@ namespace PriceTracker.Tests.PriceChecking
 
             var priceHistoryService = new Mock<IPriceHistoryService>();
 
-            var logger = new Mock<ILogger<IPriceCheckingService>>();
+            var logger = new Mock<ILogger<PriceCheckingService>>();
 
             var priceCheckingService = new PriceCheckingService(
                 scraper.Object,
@@ -111,7 +111,7 @@ namespace PriceTracker.Tests.PriceChecking
 
             var priceHistoryService = new Mock<IPriceHistoryService>();
 
-            var logger = new Mock<ILogger<IPriceCheckingService>>();
+            var logger = new Mock<ILogger<PriceCheckingService>>();
 
             var priceCheckingService = new PriceCheckingService(
                 scraper.Object,
@@ -138,7 +138,7 @@ namespace PriceTracker.Tests.PriceChecking
 
             var priceHistoryService = new Mock<IPriceHistoryService>();
 
-            var logger = new Mock<ILogger<IPriceCheckingService>>();
+            var logger = new Mock<ILogger<PriceCheckingService>>();
 
             var priceCheckingService = new PriceCheckingService(
                 scraper.Object,
@@ -146,7 +146,7 @@ namespace PriceTracker.Tests.PriceChecking
                 priceHistoryService.Object,
                 logger.Object
                 );
-            var result = await priceCheckingService.CheckPriceAsync(id, userId);
+            var result = await priceCheckingService.CheckTrackedProductPriceAsync(id, userId);
             Assert.Equal(PriceCheckStatus.ProductNotFound, result.Status);
             scraper.Verify(x => x.ScrapePriceAsync(It.IsAny<Uri>()), Times.Never);
 
@@ -181,7 +181,7 @@ namespace PriceTracker.Tests.PriceChecking
 
             var priceHistoryService = new Mock<IPriceHistoryService>();
 
-            var logger = new Mock<ILogger<IPriceCheckingService>>();
+            var logger = new Mock<ILogger<PriceCheckingService>>();
 
             var priceCheckingService = new PriceCheckingService(
                 scraper.Object,
@@ -190,7 +190,7 @@ namespace PriceTracker.Tests.PriceChecking
                 logger.Object
                 );
 
-            var result = await priceCheckingService.CheckPriceAsync(id, userId);
+            var result = await priceCheckingService.CheckTrackedProductPriceAsync(id, userId);
 
             Assert.Equal(PriceCheckStatus.Success, result.Status);
             Assert.Equal(210, result.Price.Value.Amount);
@@ -228,7 +228,7 @@ namespace PriceTracker.Tests.PriceChecking
 
             var priceHistoryService = new Mock<IPriceHistoryService>();
 
-            var logger = new Mock<ILogger<IPriceCheckingService>>();
+            var logger = new Mock<ILogger<PriceCheckingService>>();
 
             var priceCheckingService = new PriceCheckingService(
                 scraper.Object,
@@ -237,7 +237,7 @@ namespace PriceTracker.Tests.PriceChecking
                 logger.Object
                 );
 
-            var result = await priceCheckingService.CheckPriceAsync(id, userId);
+            var result = await priceCheckingService.CheckTrackedProductPriceAsync(id, userId);
 
             Assert.Equal(PriceCheckStatus.ScrapeFailed, result.Status);
             trackedProductService.Verify(x => x.UpdateAfterPriceCheckAsync(id), Times.Once);
