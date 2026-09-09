@@ -36,7 +36,7 @@ namespace PriceTracker.Features.PriceMonitoring
                     {
                         var trackedProductService =
                             scope.ServiceProvider
-                                .GetRequiredService<TrackedProductService>();
+                                .GetRequiredService<ITrackedProductService>();
 
                         var priceCheckingService =
                             scope.ServiceProvider
@@ -44,7 +44,7 @@ namespace PriceTracker.Features.PriceMonitoring
 
                         var priceHistoryService =
                             scope.ServiceProvider
-                                .GetRequiredService<PriceHistoryService>();
+                                .GetRequiredService<IPriceHistoryService>();
 
                         const int batchSize = 100;
 

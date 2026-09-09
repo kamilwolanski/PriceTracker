@@ -9,10 +9,10 @@ namespace PriceTracker.Features.TrackedProductCreation
     public class TrackedProductCreationService
     {
         private readonly PriceCheckingService _priceCheckingService;
-        private readonly TrackedProductService _trackedProductService;
-        private readonly PriceHistoryService _priceHistoryService;
+        private readonly ITrackedProductService _trackedProductService;
+        private readonly IPriceHistoryService _priceHistoryService;
 
-        public TrackedProductCreationService(TrackedProductService trackedProductService, PriceCheckingService priceCheckingService, PriceHistoryService priceHistoryService)
+        public TrackedProductCreationService(ITrackedProductService trackedProductService, PriceCheckingService priceCheckingService, IPriceHistoryService priceHistoryService)
         {
             _priceCheckingService = priceCheckingService;
             _trackedProductService = trackedProductService;

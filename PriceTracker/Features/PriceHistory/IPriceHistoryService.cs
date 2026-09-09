@@ -16,5 +16,6 @@ namespace PriceTracker.Features.PriceHistory
             );
         Task<PriceHistoryDto?> UpdateAsync(Guid id, UpdatePriceHistoryDto dto, Guid userId);
         Task<bool> DeleteAsync(Guid id, Guid userId);
+        Task<PriceHistoryDto?> GetTheLastPriceAsync(Guid productId);
     }
 }

@@ -54,11 +54,11 @@ builder.Services.AddScoped<IPriceScrapingStrategy, XkomPriceScraper>();
 builder.Services.AddScoped<IPriceScrapingStrategy, OlxPriceScraper>();
 builder.Services.AddScoped<IPriceScrapingStrategy, HtmlAgilityScraperService>();
 builder.Services.AddScoped<IPriceScrapingStrategy, PlaywrightScraperService>();
+builder.Services.AddSingleton<INotificationService, NotificationService>();
 builder.Services.AddScoped<PriceCheckingService>();
 builder.Services.AddScoped<TrackedProductCreationService>();
 builder.Services.AddHostedService<PriceMonitoringWorker>();
 builder.Services.AddSingleton<PriceChangeDetector>();
-builder.Services.AddSingleton<INotificationService, NotificationService>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>

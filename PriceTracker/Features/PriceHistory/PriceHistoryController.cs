@@ -10,13 +10,13 @@ namespace PriceTracker.Features.PriceHistory
     [Authorize]
     public class PriceHistoryController : ControllerBase
     {
-        private readonly PriceHistoryService _priceHistoryService;
-        public PriceHistoryController(PriceHistoryService priceHistoryService)
+        private readonly IPriceHistoryService _priceHistoryService;
+        public PriceHistoryController(IPriceHistoryService priceHistoryService)
         {
             _priceHistoryService = priceHistoryService;
         }
 
-        private Guid GetUserId() => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        private Guid GetUserId() => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!); 
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(Guid id)
