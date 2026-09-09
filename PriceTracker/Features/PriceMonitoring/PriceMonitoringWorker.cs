@@ -1,4 +1,5 @@
-﻿using PriceTracker.Features.NotificationService;
+﻿using Microsoft.Extensions.Options;
+using PriceTracker.Features.NotificationService;
 using PriceTracker.Features.PriceChecking;
 using PriceTracker.Features.PriceHistory;
 using PriceTracker.Features.TrackedProducts;
@@ -11,18 +12,21 @@ namespace PriceTracker.Features.PriceMonitoring
         private readonly ILogger<PriceMonitoringWorker> _logger;
         private readonly PriceChangeDetector _priceChangeDetector;
         private readonly INotificationService _notificationService;
+        private readonly PriceChangeOptions _options;
 
         public PriceMonitoringWorker(
             IServiceScopeFactory scopeFactory,
             ILogger<PriceMonitoringWorker> logger,
             PriceChangeDetector priceChangeDetector,
-            INotificationService notificationService
+            INotificationService notificationService,
+            IOptions<PriceChangeOptions> options
             )
         {
             _scopeFactory = scopeFactory;
             _logger = logger;
             _priceChangeDetector = priceChangeDetector;
             _notificationService = notificationService;
+            _options = options.Value;
         }
 
         protected override async Task ExecuteAsync(
@@ -83,7 +87,7 @@ namespace PriceTracker.Features.PriceMonitoring
                                         {
                                             var priceChange = _priceChangeDetector.Detect(lastPrice.Price.Amount, checkedPrice.Price.Value.Amount);
 
-                                            if(priceChange.Type == PriceChangeType.Decreased && priceChange.PercentageChange <= -10)
+                                            if(priceChange.Type == PriceChangeType.Decreased && priceChange.PercentageChange <= _options.PriceDropNotificationThreshold)
                                             {
                                                await _notificationService.NotifyPriceDropAsync(priceChange);
                                             }

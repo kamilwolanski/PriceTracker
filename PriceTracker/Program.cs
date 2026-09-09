@@ -48,6 +48,8 @@ builder.Services.AddOpenApi(options =>
 });
 builder.Services.Configure<PriceMonitoringOptions>(
     builder.Configuration.GetSection("PriceMonitoring"));
+builder.Services.Configure<PriceChangeOptions>(
+    builder.Configuration.GetSection("PriceChange"));
 
 builder.Services.AddScoped<ITrackedProductService, TrackedProductService>();
 builder.Services.AddScoped<IPriceHistoryService, PriceHistoryService>();
