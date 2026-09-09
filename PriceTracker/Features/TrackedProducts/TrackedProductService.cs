@@ -61,10 +61,7 @@ namespace PriceTracker.Features.TrackedProducts
                         .OrderByDescending(ph => ph.CheckedAt)
                         .Select(ph => (Money?)ph.Price)
                         .FirstOrDefault(),
-                    LastCheckedAt = tp.PriceHistory
-                        .OrderByDescending(ph => ph.CheckedAt)
-                        .Select(ph => (DateTime?)ph.CheckedAt)
-                        .FirstOrDefault(),
+                    LastCheckedAt = tp.LastCheckedAt
                 })
                 .FirstOrDefaultAsync();
         }
