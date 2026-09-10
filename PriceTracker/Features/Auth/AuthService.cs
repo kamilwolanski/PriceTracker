@@ -38,9 +38,10 @@ namespace PriceTracker.Features.Auth
 
             _context.Users.Add(user);
             var refreshToken = GenerateRefreshToken();
+
             _context.RefreshTokens.Add(new RefreshToken
             {
-                Token = refreshToken,
+                Token = HashRefreshToken(refreshToken),
                 UserId = user.Id,
                 ExpiresAt = DateTime.UtcNow.AddDays(7),
             });
@@ -81,9 +82,11 @@ namespace PriceTracker.Features.Auth
 
         public async Task<AuthResult> RefreshTokenAsync(string token)
         {
+            var tokenHash = HashRefreshToken(token);
+
             var refreshToken = await _context.RefreshTokens
                 .Include(rt => rt.User)
-                .FirstOrDefaultAsync(rt => rt.Token == token);
+                .FirstOrDefaultAsync(rt => rt.Token == tokenHash);
 
             if (refreshToken == null || refreshToken.ExpiresAt < DateTime.UtcNow)
                 return AuthResult.Fail("Invalid or expired refresh token.");
@@ -102,7 +105,10 @@ namespace PriceTracker.Features.Auth
 
         public async Task<AuthResult> LogoutAsync(string token)
         {
-            var refreshToken = await _context.RefreshTokens.FirstOrDefaultAsync(rt => rt.Token == token);
+            var tokenHash = HashRefreshToken(token);
+
+            var refreshToken = await _context.RefreshTokens
+                .FirstOrDefaultAsync(rt => rt.Token == tokenHash);
             if (refreshToken == null)
                 return AuthResult.Fail("Invalid refresh token.");
             _context.RefreshTokens.Remove(refreshToken);
@@ -148,6 +154,12 @@ namespace PriceTracker.Features.Auth
             return exception.InnerException is PostgresException postgresException &&
                 postgresException.SqlState == PostgresErrorCodes.UniqueViolation &&
                 postgresException.ConstraintName == "IX_Users_Email";
+        }
+
+        private static string HashRefreshToken(string token)
+        {
+            var hash = SHA256.HashData(Encoding.UTF8.GetBytes(token));
+            return Convert.ToBase64String(hash);
         }
     }
 }
