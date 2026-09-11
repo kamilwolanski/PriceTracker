@@ -85,13 +85,10 @@ var app = builder.Build();
 app.UseAuthentication();
 app.UseAuthorization();
 
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-    app.MapScalarApiReference();
-}
+app.MapOpenApi();
+app.MapScalarApiReference();
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 
 app.MapControllers();
 

@@ -10,7 +10,27 @@ services:
       - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  migration:
+    build:
+      context: .
+      dockerfile: Dockerfile.migration
+    working_dir: /src
+    volumes:
+      - .:/src
+    environment:
+      ConnectionStrings__DefaultConnection: Host=db;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+    depends_on:
+      db:
+        condition: service_healthy
+    command: >
+      bash -c "dotnet restore &&
+               dotnet ef database update"
 
 volumes:
   postgres_data:
-  
