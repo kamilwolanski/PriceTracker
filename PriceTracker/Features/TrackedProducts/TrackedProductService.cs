@@ -6,6 +6,7 @@ using PriceTracker.Features.TrackedProducts.DTOs;
 using PriceTracker.Models;
 using Microsoft.Extensions.Options;
 using PriceTracker.Features.PriceMonitoring;
+using PriceTracker.Common.DTOs;
 
 namespace PriceTracker.Features.TrackedProducts
 {
@@ -19,10 +20,18 @@ namespace PriceTracker.Features.TrackedProducts
             _options = options.Value;
         }
 
-        public async Task<List<TrackedProductDto>> GetAllTrackedProductsAsync(Guid userId)
+        public async Task<PaginatedResult<TrackedProductDto>> GetAllTrackedProductsAsync(Guid userId, int page, int limit)
         {
-            return await _context.TrackedProducts
+            var totalCount = await _context.TrackedProducts
+                .CountAsync(tp => tp.UserId == userId);
+
+            var totalPages = (int)Math.Ceiling((double)totalCount / limit);
+
+            var trackedProducts = await _context.TrackedProducts
                 .Where(tp => tp.UserId == userId)
+                .OrderByDescending(tp => tp.Id)
+                .Skip((page - 1) * limit)
+                .Take(limit)
                 .Select(tp => new TrackedProductDto
                 {
                     Id = tp.Id,
@@ -35,6 +44,15 @@ namespace PriceTracker.Features.TrackedProducts
                     LastCheckedAt = tp.LastCheckedAt
                 })
                 .ToListAsync();
+
+            return new PaginatedResult<TrackedProductDto>
+            {
+                Items = trackedProducts,
+                Limit = limit,
+                TotalCount = totalCount,
+                Page = page,
+                TotalPages = totalPages
+            };
         }
 
         public async Task<List<TrackedProduct>> GetProductsForPriceCheckAsync(

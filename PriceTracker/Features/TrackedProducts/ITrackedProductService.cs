@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using PriceTracker.Common.DTOs;
 using PriceTracker.Features.PriceHistory.DTOs;
 using PriceTracker.Features.TrackedProducts.DTOs;
 using PriceTracker.Models;
@@ -7,7 +8,7 @@ namespace PriceTracker.Features.TrackedProducts
 {
     public interface ITrackedProductService
     {
-        Task<List<TrackedProductDto>> GetAllTrackedProductsAsync(Guid userId);
+        Task<PaginatedResult<TrackedProductDto>> GetAllTrackedProductsAsync(Guid userId, int page, int limit);
         Task<List<TrackedProduct>> GetProductsForPriceCheckAsync(int skip, int take);
         Task<TrackedProductDto?> GetByIdAsync(Guid id, Guid userId);
         Task<List<PriceHistoryDto>?> GetPriceHistoryAsync(Guid trackedProductId, Guid userId);

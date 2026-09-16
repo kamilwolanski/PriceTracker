@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using PriceTracker.Common.DTOs;
 using PriceTracker.Features.PriceChecking;
 using PriceTracker.Features.TrackedProductCreation;
 using PriceTracker.Features.TrackedProducts.DTOs;
@@ -29,9 +30,9 @@ namespace PriceTracker.Features.TrackedProducts
         private Guid GetUserId() => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
         [HttpGet]
-        public async Task<IActionResult> GetTrackedProducts()
+        public async Task<IActionResult> GetTrackedProducts([FromQuery] PaginationQuery query)
         {
-            var trackedProducts = await _trackedProductService.GetAllTrackedProductsAsync(GetUserId());
+            var trackedProducts = await _trackedProductService.GetAllTrackedProductsAsync(GetUserId(), query.Page, query.Limit);
             return Ok(trackedProducts);
         }
 
