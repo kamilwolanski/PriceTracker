@@ -20,6 +20,11 @@ namespace PriceTracker.Features.TrackedProducts
             _options = options.Value;
         }
 
+        private Task<bool> ExistAsync(Guid id, Guid userId)
+        {
+            return _context.TrackedProducts.AnyAsync(tp => tp.Id == id && tp.UserId == userId);
+        }
+
         public async Task<PaginatedResult<TrackedProductDto>> GetAllTrackedProductsAsync(Guid userId, int page, int limit)
         {
             var totalCount = await _context.TrackedProducts
@@ -29,7 +34,7 @@ namespace PriceTracker.Features.TrackedProducts
 
             var trackedProducts = await _context.TrackedProducts
                 .Where(tp => tp.UserId == userId)
-                .OrderByDescending(tp => tp.Id)
+                .OrderByDescending(tp => tp.Id)     
                 .Skip((page - 1) * limit)
                 .Take(limit)
                 .Select(tp => new TrackedProductDto
@@ -89,8 +94,7 @@ namespace PriceTracker.Features.TrackedProducts
 
         public async Task<List<PriceHistoryDto>?> GetPriceHistoryAsync(Guid trackedProductId, Guid userId)
         {
-            var exists = await _context.TrackedProducts
-                .AnyAsync(tp => tp.Id == trackedProductId && tp.UserId == userId);
+            var exists = await ExistAsync(trackedProductId, userId);
 
             if (!exists)
                 return null;
@@ -106,6 +110,38 @@ namespace PriceTracker.Features.TrackedProducts
                     TrackedProductId = trackedProductId,
                 })
                 .ToListAsync();
+        }
+
+        public async Task<PriceHistoryStatisticsResult> GetPriceHistoryStatisticsAsync(
+            Guid trackedProductId,
+            Guid userId)
+        {
+            var exists = await ExistAsync(trackedProductId, userId);
+
+            if (!exists)
+            {
+                return new PriceHistoryStatisticsResult
+                {
+                    ProductExists = false
+                };
+            }
+
+            var statistics = await _context.PriceHistories
+                .Where(ph => ph.TrackedProductId == trackedProductId)
+                .GroupBy(_ => 1)
+                .Select(g => new PriceHistoryStatistics
+                {
+                    Min = g.Min(ph => ph.Price.Amount),
+                    Max = g.Max(ph => ph.Price.Amount),
+                    Average = Math.Round(g.Average(ph => ph.Price.Amount), 2)
+                })
+                .FirstOrDefaultAsync();
+
+            return new PriceHistoryStatisticsResult
+            {
+                ProductExists = true,
+                Statistics = statistics
+            };
         }
 
         public async Task<TrackedProductDto> AddAsync(CreateTrackedProductDto dto, Guid userId)

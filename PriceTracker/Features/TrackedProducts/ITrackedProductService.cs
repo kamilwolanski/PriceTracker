@@ -12,6 +12,7 @@ namespace PriceTracker.Features.TrackedProducts
         Task<List<TrackedProduct>> GetProductsForPriceCheckAsync(int skip, int take);
         Task<TrackedProductDto?> GetByIdAsync(Guid id, Guid userId);
         Task<List<PriceHistoryDto>?> GetPriceHistoryAsync(Guid trackedProductId, Guid userId);
+        Task<PriceHistoryStatisticsResult> GetPriceHistoryStatisticsAsync(Guid trackedProductId, Guid userId);
         Task<TrackedProductDto> AddAsync(CreateTrackedProductDto dto, Guid userId);
         Task<TrackedProductDto?> UpdateAsync(Guid id, UpdateTrackedProductDto dto, Guid userId);
         Task<bool> DeleteAsync(Guid id, Guid userId);

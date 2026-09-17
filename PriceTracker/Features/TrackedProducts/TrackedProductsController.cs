@@ -56,6 +56,18 @@ namespace PriceTracker.Features.TrackedProducts
             return Ok(priceHistory);
         }
 
+        [HttpGet("{id}/price-history/statistics")]
+        public async Task<IActionResult> GetPriceHistoryStatistics(Guid id)
+        {
+            var result = await _trackedProductService
+                .GetPriceHistoryStatisticsAsync(id, GetUserId());
+
+            if (!result.ProductExists)
+                return NotFound();
+
+            return Ok(result.Statistics);
+        }
+
         [HttpPost]
         public async Task<IActionResult> AddTrackedProduct([FromBody] CreateTrackedProductDto product)
         {
