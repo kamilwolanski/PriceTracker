@@ -71,7 +71,7 @@ namespace PriceTracker.Features.Auth
             var refreshToken = GenerateRefreshToken();
             _context.RefreshTokens.Add(new RefreshToken
             {
-                Token = refreshToken,
+                Token = HashRefreshToken(refreshToken),
                 UserId = user.Id,
                 ExpiresAt = DateTime.UtcNow.AddDays(7),
             });
@@ -95,7 +95,7 @@ namespace PriceTracker.Features.Auth
             _context.RefreshTokens.Remove(refreshToken);
             _context.RefreshTokens.Add(new RefreshToken
             {
-                Token = newRefreshToken,
+                Token = HashRefreshToken(newRefreshToken),
                 UserId = refreshToken.UserId,
                 ExpiresAt = DateTime.UtcNow.AddDays(7),
             });
