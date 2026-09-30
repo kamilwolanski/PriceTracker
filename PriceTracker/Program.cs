@@ -1,21 +1,22 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.OpenApi;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi;
 using PriceTracker.Data;
+using PriceTracker.Exceptions;
 using PriceTracker.Features.Auth;
-using PriceTracker.Features.PriceHistory;
+using PriceTracker.Features.NotificationService;
 using PriceTracker.Features.PriceChecking;
+using PriceTracker.Features.PriceChecking.HtmlAgilityScraper;
+using PriceTracker.Features.PriceChecking.PlaywrightScraper;
+using PriceTracker.Features.PriceChecking.WebsiteScrapers;
+using PriceTracker.Features.PriceHistory;
+using PriceTracker.Features.PriceMonitoring;
 using PriceTracker.Features.TrackedProductCreation;
 using PriceTracker.Features.TrackedProducts;
 using Scalar.AspNetCore;
 using System.Text;
-using PriceTracker.Features.PriceChecking.HtmlAgilityScraper;
-using PriceTracker.Features.PriceChecking.PlaywrightScraper;
-using PriceTracker.Features.PriceChecking.WebsiteScrapers;
-using PriceTracker.Features.PriceMonitoring;
-using PriceTracker.Features.NotificationService;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -65,6 +66,9 @@ builder.Services.AddScoped<ITrackedProductCreationService, TrackedProductCreatio
 builder.Services.AddHostedService<PriceMonitoringWorker>();
 builder.Services.AddSingleton<PriceChangeDetector>();
 
+builder.Services.AddExceptionHandler<UnhandledExceptionHandler>();
+builder.Services.AddProblemDetails();
+
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -81,6 +85,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 var app = builder.Build();
+app.UseExceptionHandler();
 
 app.UseAuthentication();
 app.UseAuthorization();
@@ -89,7 +94,6 @@ app.MapOpenApi();
 app.MapScalarApiReference();
 
 //app.UseHttpsRedirection();
-
 app.MapControllers();
 
 app.Run();

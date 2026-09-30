@@ -197,10 +197,7 @@ namespace PriceTracker.Features.TrackedProducts
         public async Task<DateTime> UpdateAfterPriceCheckAsync(Guid id)
         {
             var trackedProduct = await _context.TrackedProducts
-                .FirstOrDefaultAsync(tp => tp.Id == id);
-
-            if (trackedProduct == null)
-                throw new InvalidOperationException("Tracked product not found.");
+                .SingleAsync(tp => tp.Id == id);
 
             var checkedAt = DateTime.UtcNow;
 
